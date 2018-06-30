@@ -8,6 +8,9 @@ import (
 	"github.com/go-echo-api-test-sample/migrations"
 	"os"
 	"github.com/labstack/gommon/log"
+	"os/signal"
+	"context"
+	"time"
 )
 
 func main() {
@@ -23,5 +26,25 @@ func main() {
 	e.GET("/users", h.GetIndex)
 	e.GET("/users/:id", h.GetDetail)
 
-	e.Logger.Fatal(e.Start(":1234"))
+	//e.Logger.Fatal(e.Start(":1234"))
+
+	// Start server
+	go func() {
+		if err := e.Start(":1323"); err != nil {
+			// TODO not works
+			// https://echo.labstack.com/cookbook/graceful-shutdown
+			e.Logger.Info("shutting down the server")
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }
