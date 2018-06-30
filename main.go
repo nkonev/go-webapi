@@ -6,17 +6,22 @@ import (
 	"github.com/go-echo-api-test-sample/models"
 	"github.com/go-echo-api-test-sample/db"
 	"github.com/go-echo-api-test-sample/migrations"
+	"os"
+	"github.com/labstack/gommon/log"
 )
 
 func main() {
+	log.SetOutput(os.Stdout)
+
 	e := echo.New()
 
-	d := db.DBConnect()
-	migrations.MigrateX(d)
-	h := users.NewHandler(user.NewUserModel(d))
+	d0 := db.DBConnect()
+	migrations.MigrateX(d0)
+	d1 := db.DBConnect()
+	h := users.NewHandler(user.NewUserModel(d1))
 
 	e.GET("/users", h.GetIndex)
 	e.GET("/users/:id", h.GetDetail)
 
-	e.Logger.Fatal(e.Start(":1324"))
+	e.Logger.Fatal(e.Start(":1234"))
 }

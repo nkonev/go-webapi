@@ -29,5 +29,5 @@
   name = "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 [[constraint]]
-  name = "github.com/pressly/goose"
-  version = "2.3.0"
+  name = "github.com/Boostport/migration"
+  version = "0.10.0"

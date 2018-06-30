@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/Boostport/migration"
+  packages = ["parser"]
+  revision = "2f5363cff1d8766be28ec378575022fd92360a1a"
+  version = "v0.10.0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -59,12 +65,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/pressly/goose"
-  packages = ["."]
-  revision = "95600eb369b1f657efd54a401ab85d0647a1db80"
-  version = "v2.3.0"
-
-[[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
@@ -115,6 +115,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b10b0acc26bd8d85b8da6ea9bcd07e7e05b2b322db6121080f42129e47d8eb5c"
+  inputs-digest = "35cafb936835583b300eb352cabed49fe9c0314a7f4c6b3d9f41092a609134da"
   solver-name = "gps-cdcl"
   solver-version = 1

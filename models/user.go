@@ -15,6 +15,8 @@ type (
 	User struct {
 		ID   int    `json:"id" db:"id"`
 		Name string `json:"name" db:"name"`
+		Surname string
+		Lastname string
 	}
 
 	UserModel struct {
@@ -39,7 +41,7 @@ func (u *UserModel) FindAll() ([]User, error) {
 	users := []User{}
 	e := u.db.Select(&users, "SELECT * FROM users order by id asc")
 	if e !=nil {
-		log.Errorf("An error occured during get users %v", e)
+		log.Errorf("An error occurred during get users %v", e)
 		return nil, e
 	}
 	return users, nil

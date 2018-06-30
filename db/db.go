@@ -8,7 +8,6 @@ import (
 
 func DBConnect() *sqlx.DB {
 	db, err := sqlx.Connect("postgres", "host=172.22.0.2 user=postgres password=postgresqlPassword dbname=postgres sslmode=disable")
-	//defer db.Close()
 	if err != nil {
 		log.Fatalln(err)
 	}
