@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func main() {
+func configureEcho() *echo.Echo {
 	log.SetOutput(os.Stdout)
 
 	e := echo.New()
@@ -25,7 +25,11 @@ func main() {
 
 	e.GET("/users", h.GetIndex)
 	e.GET("/users/:id", h.GetDetail)
+	return e
+}
 
+func main() {
+	e := configureEcho()
 
 	log.Info("Starting server")
 	// Start server

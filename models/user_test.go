@@ -2,14 +2,25 @@ package user
 
 import (
 	"testing"
-
 	"github.com/stretchr/testify/assert"
-	"github.com/zaru/go-echo-api-test-sample/test"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"database/sql"
+	"github.com/jmoiron/sqlx"
 )
 
+func MockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *sqlx.DB) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("An error '%s' was not expecting", err)
+	}
+
+	sqlxDB := sqlx.NewDb(mockDB, "sqlmock")
+	return mockDB, mock, sqlxDB
+}
+
+
 func TestFindByID(t *testing.T) {
-	mockDB, mock, sqlxDB := test.MockDB(t)
+	mockDB, mock, sqlxDB := MockDB(t)
 	defer mockDB.Close()
 
 	var cols []string = []string{"id", "name"}
@@ -17,9 +28,10 @@ func TestFindByID(t *testing.T) {
 		AddRow(1, "foobar"))
 
 	um := NewUserModel(sqlxDB)
-	u := um.FindByID("1")
+	u, e := um.FindByID("1")
+	assert.Nil(t, e)
 
-	expect := User{
+	expect := &User{
 		ID:   1,
 		Name: "foobar",
 	}
@@ -27,7 +39,7 @@ func TestFindByID(t *testing.T) {
 }
 
 func TestFindAll(t *testing.T) {
-	mockDB, mock, sqlxDB := test.MockDB(t)
+	mockDB, mock, sqlxDB := MockDB(t)
 	defer mockDB.Close()
 
 	u1 := User{ID: 1, Name: "foobar"}

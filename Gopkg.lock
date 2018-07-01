@@ -88,15 +88,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/zaru/go-echo-api-test-sample"
-  packages = [
-    "models",
-    "test"
-  ]
-  revision = "a70ad0dccbbf3b237f8f4180a75b013813928e65"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -119,6 +110,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "65c52d3c5188972815b5fc99718f0d8820975df13ac171c051bf29c5d194622b"
+  inputs-digest = "6fbe9e0058b727b3dace682e1b5fbffd8fa6263080fdb0d5e1b39e244ae6bf89"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -7,26 +7,26 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
-	"github.com/zaru/go-echo-api-test-sample/models"
+	"github.com/go-echo-api-test-sample/models"
 )
 
 type (
 	UsersModelStub struct{}
 )
 
-func (u *UsersModelStub) FindByID(id string) user.User {
-	return user.User{
+func (u *UsersModelStub) FindByID(id string) (*user.User, error) {
+	return &user.User{
 		ID:   1,
 		Name: "foo",
-	}
+	}, nil
 }
-func (u *UsersModelStub) FindAll() []user.User {
+func (u *UsersModelStub) FindAll() ([]user.User, error) {
 	users := []user.User{}
 	users = append(users, user.User{
 		ID:   100,
 		Name: "foo",
 	})
-	return users
+	return users, nil
 }
 
 func TestGetDetail(t *testing.T) {
@@ -41,7 +41,7 @@ func TestGetDetail(t *testing.T) {
 	u := &UsersModelStub{}
 	h := NewHandler(u)
 
-	var userJSON = `{"id":1,"name":"foo"}`
+	var userJSON = `{"id":1,"name":"foo","Surname":"","Lastname":""}`
 
 	if assert.NoError(t, h.GetDetail(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -59,7 +59,7 @@ func TestGetIndex(t *testing.T) {
 	u := &UsersModelStub{}
 	h := NewHandler(u)
 
-	var userJSON = `{"users":[{"id":100,"name":"foo"}]}`
+	var userJSON = `{"users":[{"id":100,"name":"foo","Surname":"","Lastname":""}]}`
 
 	if assert.NoError(t, h.GetIndex(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
