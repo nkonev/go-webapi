@@ -11,12 +11,17 @@ import (
 	"os/signal"
 	"context"
 	"time"
+	"github.com/labstack/echo/middleware"
 )
 
 func configureEcho() *echo.Echo {
 	log.SetOutput(os.Stdout)
 
 	e := echo.New()
+
+	e.Use(middleware.Logger())
+	e.Use(middleware.Secure())
+	e.Use(middleware.BodyLimit("2M"))
 
 	d0 := db.DBConnect()
 	migrations.MigrateX(d0)
