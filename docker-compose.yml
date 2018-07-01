@@ -9,8 +9,8 @@ services:
     hostname: postgresql
     container_name: postgresql-go-dev
     restart: unless-stopped
-    ports:
-      - 35432:5432
+#    ports:
+#      - 35432:5432
     environment:
       - POSTGRES_PASSWORD=postgresqlPassword
     volumes :
