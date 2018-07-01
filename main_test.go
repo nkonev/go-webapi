@@ -6,10 +6,11 @@ import (
 	"testing"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"io"
 )
 
 
-func request(method, path string, e *echo.Echo) (int, string) {
+func request(method, path string, body io.Reader, e *echo.Echo) (int, string) {
 	req := test.NewRequest(method, path, nil)
 	rec := test.NewRecorder()
 	e.ServeHTTP(rec, req)
@@ -20,7 +21,7 @@ func TestUsers(t *testing.T) {
 	e := configureEcho();
 	defer e.Close()
 
-	c, b := request("GET", "/users", e)
+	c, b := request("GET", "/users", nil, e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.NotEmpty(t, b)
 }
@@ -29,7 +30,7 @@ func TestUser(t *testing.T) {
 	e := configureEcho();
 	defer e.Close()
 
-	c, b := request("GET", "/users/1", e)
+	c, b := request("GET", "/users/1", nil, e)
 	assert.Equal(t, http.StatusOK, c)
 	assert.NotEmpty(t, b)
 }
