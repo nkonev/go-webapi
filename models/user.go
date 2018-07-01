@@ -7,7 +7,7 @@ import (
 
 type (
 	UserModelImpl interface {
-		FindByID(id string) User
+		FindByID(id string) (*User, error)
 		FindAll() ([]User, error)
 	}
 
@@ -29,17 +29,21 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 	}
 }
 
-func (u *UserModel) FindByID(id string) User {
+func (u *UserModel) FindByID(id string) (*User, error) {
 	user := User{}
-	u.db.Get(&user, "SELECT * FROM users where id = $1 limit 1", id)
+	e := u.db.Get(&user, "SELECT * FROM users where id = $1 limit 1", id)
+	if e != nil {
+		log.Errorf("An error occurred during get users %v", e)
+		return nil, e
+	}
 
-	return user
+	return &user, nil
 }
 
 func (u *UserModel) FindAll() ([]User, error) {
 	users := []User{}
 	e := u.db.Select(&users, "SELECT * FROM users order by id asc")
-	if e !=nil {
+	if e != nil {
 		log.Errorf("An error occurred during get users %v", e)
 		return nil, e
 	}

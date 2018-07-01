@@ -34,6 +34,9 @@ func (h *handler) GetIndex(c echo.Context) error {
 
 func (h *handler) GetDetail(c echo.Context) error {
 	id := c.Param("id")
-	u := h.UserModel.FindByID(id)
+	u, e := h.UserModel.FindByID(id)
+	if e != nil {
+		return c.JSON(http.StatusInternalServerError, H{"error": "We had error ("})
+	}
 	return c.JSON(http.StatusOK, u)
 }
