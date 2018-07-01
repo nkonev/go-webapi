@@ -3,7 +3,11 @@
 
 [[projects]]
   name = "github.com/Boostport/migration"
-  packages = ["parser"]
+  packages = [
+    ".",
+    "driver/postgres",
+    "parser"
+  ]
   revision = "2f5363cff1d8766be28ec378575022fd92360a1a"
   version = "v0.10.0"
 
@@ -20,13 +24,13 @@
     ".",
     "reflectx"
   ]
-  revision = "3379e5993990b1f927fc8db926485e6f6becf2d2"
+  revision = "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849"
 
 [[projects]]
   name = "github.com/labstack/echo"
   packages = ["."]
-  revision = "cec7629194fe4bf83b0c72d9a02d340c7a1468ac"
-  version = "3.2.3"
+  revision = "6d227dfea4d2e52cb76856120b3c17f758139b4e"
+  version = "3.3.5"
 
 [[projects]]
   name = "github.com/labstack/gommon"
@@ -34,8 +38,8 @@
     "color",
     "log"
   ]
-  revision = "57409ada9da0f2afad6664c49502f8c50fbd8476"
-  version = "0.2.3"
+  revision = "d6898124de917583f5ff5592ef931d1dfe0ddc05"
+  version = "0.2.6"
 
 [[projects]]
   branch = "master"
@@ -44,7 +48,7 @@
     ".",
     "oid"
   ]
-  revision = "b609790bd85edf8e9ab7e0f8912750a786177bcf"
+  revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -67,8 +71,8 @@
 [[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
-  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
-  version = "v1.1.4"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -98,13 +102,13 @@
     "acme",
     "acme/autocert"
   ]
-  revision = "ca1fcd4ab4c10bc58852a894bcf195fab2229efe"
+  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "8eb05f94d449fdf134ec24630ce69ada5b469c1c"
+  revision = "7138fd3d9dc8335c567ca206f4333fb75eb05d56"
 
 [[projects]]
   name = "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -115,6 +119,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "35cafb936835583b300eb352cabed49fe9c0314a7f4c6b3d9f41092a609134da"
+  inputs-digest = "65c52d3c5188972815b5fc99718f0d8820975df13ac171c051bf29c5d194622b"
   solver-name = "gps-cdcl"
   solver-version = 1

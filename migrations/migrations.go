@@ -10,6 +10,7 @@ import (
 
 func _migrate(db *sql.DB) {
 	driver, err0 := postgres.NewFromDB(db)
+	defer driver.Close()
 
 	if err0 != nil {
 		log.Fatalf("Unable to open connection to postgres server: %s", err0)
@@ -37,7 +38,7 @@ INSERT INTO users VALUES
 		log.Fatalf("Error during migration %s", err)
 	}
 
-	log.Printf("Applied %d migrations", applied)
+	log.Infof("Applied %d migrations", applied)
 }
 
 func MigrateX(db *sqlx.DB){

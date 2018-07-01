@@ -26,25 +26,25 @@ func main() {
 	e.GET("/users", h.GetIndex)
 	e.GET("/users/:id", h.GetDetail)
 
-	//e.Logger.Fatal(e.Start(":1234"))
 
+	log.Info("Starting server")
 	// Start server
 	go func() {
-		if err := e.Start(":1323"); err != nil {
-			// TODO not works
-			// https://echo.labstack.com/cookbook/graceful-shutdown
-			e.Logger.Info("shutting down the server")
+		if err := e.Start(":1234"); err != nil {
+			log.Infof("shutting down the server due error %v", err)
 		}
 	}()
 
+	log.Info("Waiting for interrupt (2) (Ctrl+C)")
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 10 seconds.
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+	log.Infof("Got signal %v", os.Interrupt)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+		log.Fatal(err)
 	}
 }
