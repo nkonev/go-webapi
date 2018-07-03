@@ -10,3 +10,7 @@
 [[constraint]]
   name = "github.com/labstack/echo"
   version = "3.3.5"
+
+[[constraint]]
+  branch = "v2_renamed"
+  name = "github.com/nkonev/authboss"

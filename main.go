@@ -12,10 +12,21 @@ import (
 	"context"
 	"time"
 	"github.com/labstack/echo/middleware"
+	"github.com/nkonev/authboss"
+	"github.com/nkonev/authboss/defaults"
+	_ "github.com/nkonev/authboss/auth"
 )
 
 func configureEcho() *echo.Echo {
 	log.SetOutput(os.Stdout)
+
+	ab := authboss.New()
+	ab.Config.Core.ViewRenderer = defaults.JSONRenderer{}
+
+	defaults.SetCore(&ab.Config, true, true)
+	if err := ab.Init("auth"); err != nil {
+		log.Panic(err)
+	}
 
 	e := echo.New()
 
@@ -30,8 +41,46 @@ func configureEcho() *echo.Echo {
 
 	e.GET("/users", h.GetIndex)
 	e.GET("/users/:id", h.GetDetail)
+	//e.GET("/authboss", http.StripPrefix("/authboss", ab.Config.Core.Router))
+	//mid := authboss.Middleware(ab)
+
+	g := e.Group("/login")
+	g.Use(wrap(ab.Config.Core.Router))
+
+	//mid(e.Server.Handler)
+
 	return e
 }
+
+// MiddlewareFunc == func(HandlerFunc) HandlerFunc
+// HandlerFunc == func(Context) error
+func wrap(router authboss.Router) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			router.ServeHTTP(c.Response(), c.Request())
+			return next(c)
+		}
+	}
+}
+
+/*func wrap(authMid func(http.Handler) http.Handler) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+
+
+			am := authMid()
+
+			return echo.ErrUnauthorized
+		}
+	}
+
+}
+
+func GetAuth(c echo.Context, ab *authboss.Authboss) error {
+	ab.Core.Router.ServeHTTP(c.Response().Writer, c.Request())
+	return nil
+}*/
+
 
 func main() {
 	e := configureEcho()
