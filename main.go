@@ -50,6 +50,7 @@ func configureEcho() *echo.Echo {
 
 	return e
 }
+
 func wrap(h http.Handler) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -59,17 +60,6 @@ func wrap(h http.Handler) echo.MiddlewareFunc {
 	}
 }
 
-
-// MiddlewareFunc == func(HandlerFunc) HandlerFunc
-// HandlerFunc == func(Context) error
-func wrap0(router authboss.Router) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			router.ServeHTTP(c.Response(), c.Request())
-			return next(c)
-		}
-	}
-}
 
 func main() {
 	e := configureEcho()
