@@ -12,5 +12,5 @@
   version = "3.3.5"
 
 [[constraint]]
-  branch = "v2_renamed"
   name = "github.com/nkonev/authboss"
+  revision = "c333260bec30d246b412f5897c3fb4c03508c50e"

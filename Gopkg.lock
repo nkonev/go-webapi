@@ -80,14 +80,13 @@
   version = "v0.0.3"
 
 [[projects]]
-  branch = "v2_renamed"
   name = "github.com/nkonev/authboss"
   packages = [
     ".",
     "auth",
     "defaults"
   ]
-  revision = "2abafe22de505a540f56245aac45bc3acb5ad7c0"
+  revision = "c333260bec30d246b412f5897c3fb4c03508c50e"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -177,6 +176,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5623118f03e17c1988b73594ae9ea1a51276a56994ba1b90d4f79cfdaca2a7fe"
+  inputs-digest = "b2e5b2c93a879c5c9df9a14109e6c371dc6cfec0bf46db8490fa6e06756f30ee"
   solver-name = "gps-cdcl"
   solver-version = 1

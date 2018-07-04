@@ -15,6 +15,7 @@ import (
 	"github.com/nkonev/authboss"
 	"github.com/nkonev/authboss/defaults"
 	_ "github.com/nkonev/authboss/auth"
+	"net/http"
 )
 
 func configureEcho() *echo.Echo {
@@ -24,7 +25,6 @@ func configureEcho() *echo.Echo {
 
 	ab := authboss.New()
 	ab.Config.Core.ViewRenderer = defaults.JSONRenderer{}
-	ab.Config.Paths.Mount = authPathPrefix
 	defaults.SetCore(&ab.Config, true, true)
 	if err := ab.Init("auth"); err != nil {
 		log.Panic(err)
@@ -43,20 +43,26 @@ func configureEcho() *echo.Echo {
 
 	e.GET("/users", h.GetIndex)
 	e.GET("/users/:id", h.GetDetail)
-	//e.GET("/authboss", http.StripPrefix("/authboss", ab.Config.Core.Router))
-	//mid := authboss.Middleware(ab)
 
 	g := e.Group(authPathPrefix)
-	g.Use(wrap(ab.Config.Core.Router))
+	g.Use(wrap(http.StripPrefix(authPathPrefix, ab.Config.Core.Router)))
 
-	//mid(e.Server.Handler)
 
 	return e
 }
+func wrap(h http.Handler) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			h.ServeHTTP(c.Response(), c.Request())
+			return next(c)
+		}
+	}
+}
+
 
 // MiddlewareFunc == func(HandlerFunc) HandlerFunc
 // HandlerFunc == func(Context) error
-func wrap(router authboss.Router) echo.MiddlewareFunc {
+func wrap0(router authboss.Router) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			router.ServeHTTP(c.Response(), c.Request())
@@ -64,25 +70,6 @@ func wrap(router authboss.Router) echo.MiddlewareFunc {
 		}
 	}
 }
-
-/*func wrap(authMid func(http.Handler) http.Handler) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-
-
-			am := authMid()
-
-			return echo.ErrUnauthorized
-		}
-	}
-
-}
-
-func GetAuth(c echo.Context, ab *authboss.Authboss) error {
-	ab.Core.Router.ServeHTTP(c.Response().Writer, c.Request())
-	return nil
-}*/
-
 
 func main() {
 	e := configureEcho()
