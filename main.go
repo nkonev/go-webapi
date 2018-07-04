@@ -20,9 +20,11 @@ import (
 func configureEcho() *echo.Echo {
 	log.SetOutput(os.Stdout)
 
+	authPathPrefix := "/auth2"
+
 	ab := authboss.New()
 	ab.Config.Core.ViewRenderer = defaults.JSONRenderer{}
-
+	ab.Config.Paths.Mount = authPathPrefix
 	defaults.SetCore(&ab.Config, true, true)
 	if err := ab.Init("auth"); err != nil {
 		log.Panic(err)
@@ -44,7 +46,7 @@ func configureEcho() *echo.Echo {
 	//e.GET("/authboss", http.StripPrefix("/authboss", ab.Config.Core.Router))
 	//mid := authboss.Middleware(ab)
 
-	g := e.Group("/login")
+	g := e.Group(authPathPrefix)
 	g.Use(wrap(ab.Config.Core.Router))
 
 	//mid(e.Server.Handler)

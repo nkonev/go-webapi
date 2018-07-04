@@ -8,8 +8,8 @@
     "driver/postgres",
     "parser"
   ]
-  revision = "2f5363cff1d8766be28ec378575022fd92360a1a"
-  version = "v0.10.0"
+  revision = "69576d446e39612fd48abd2f3dd2d4feec927c9c"
+  version = "v0.10.1"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -84,9 +84,10 @@
   name = "github.com/nkonev/authboss"
   packages = [
     ".",
+    "auth",
     "defaults"
   ]
-  revision = "c333260bec30d246b412f5897c3fb4c03508c50e"
+  revision = "2abafe22de505a540f56245aac45bc3acb5ad7c0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -176,6 +177,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dc6a0a7137e22063ec5ab619d10820ac0e88e127a59135ee2ccba0c733a97194"
+  inputs-digest = "5623118f03e17c1988b73594ae9ea1a51276a56994ba1b90d4f79cfdaca2a7fe"
   solver-name = "gps-cdcl"
   solver-version = 1
