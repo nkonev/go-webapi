@@ -80,15 +80,6 @@
   version = "v0.0.3"
 
 [[projects]]
-  name = "github.com/nkonev/authboss"
-  packages = [
-    ".",
-    "auth",
-    "defaults"
-  ]
-  revision = "c333260bec30d246b412f5897c3fb4c03508c50e"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -117,6 +108,16 @@
   name = "github.com/valyala/fasttemplate"
   packages = ["."]
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
+
+[[projects]]
+  name = "github.com/volatiletech/authboss"
+  packages = [
+    ".",
+    "auth",
+    "defaults"
+  ]
+  revision = "89dc3b4d380d7d3bbe74df324480c09d916c092b"
+  version = "v2.0.0-rc5"
 
 [[projects]]
   branch = "master"
@@ -176,6 +177,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b2e5b2c93a879c5c9df9a14109e6c371dc6cfec0bf46db8490fa6e06756f30ee"
+  inputs-digest = "ff901cdb4422c8c7f29c87f3edc0e06345645510fb79d9269ed488d69991ac1b"
   solver-name = "gps-cdcl"
   solver-version = 1

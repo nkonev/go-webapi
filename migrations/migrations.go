@@ -19,7 +19,6 @@ func _migrate(db *sql.DB) {
 	migrations2 := &migration.MemoryMigrationSource{
 		Files: map[string]string{
 			"1_init.up.sql":
-
 `CREATE TABLE users (
     id int NOT NULL PRIMARY KEY,
     name text,
@@ -30,6 +29,14 @@ INSERT INTO users VALUES
 (0, 'root', 's', 'l'),
 (1, 'vojtechvitek', '', '');`,
 
+			"2_alter.up.sql":
+`ALTER TABLE users ADD COLUMN password text;`,
+
+			"3_update.up.sql":
+`UPDATE users SET password = 'password'; ALTER TABLE users ALTER COLUMN  password  SET NOT NULL;`,
+
+			"4_update.up.sql":
+`UPDATE users SET password = '$2a$10$yZV9IDfxDQjGm1eAvbWip.9JxQzWKTcKm26PGEa/IiMtVc6TJMACu';`,
 		},
 	}
 

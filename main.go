@@ -12,19 +12,28 @@ import (
 	"context"
 	"time"
 	"github.com/labstack/echo/middleware"
-	"github.com/nkonev/authboss"
-	"github.com/nkonev/authboss/defaults"
-	_ "github.com/nkonev/authboss/auth"
+	"github.com/volatiletech/authboss"
+	"github.com/volatiletech/authboss/defaults"
+	_ "github.com/volatiletech/authboss/auth"
 	"net/http"
+	"github.com/go-echo-api-test-sample/auth"
 )
 
 func configureEcho() *echo.Echo {
+	d0 := db.DBConnect()
+	migrations.MigrateX(d0)
+	d1 := db.DBConnect()
+	m := user.NewUserModel(d1)
+
 	log.SetOutput(os.Stdout)
 
 	authPathPrefix := "/auth2"
 
 	ab := authboss.New()
 	ab.Config.Core.ViewRenderer = defaults.JSONRenderer{}
+	ab.Config.Storage.Server = &auth.MyServerStorer{Model:*m}
+	// ab.Config.Storage.SessionState = mySessionImplementation //todo implement
+	// ab.Config.Storage.CookieState = myCookieImplementation //todo implement
 	defaults.SetCore(&ab.Config, true, true)
 	if err := ab.Init("auth"); err != nil {
 		log.Panic(err)
@@ -36,9 +45,6 @@ func configureEcho() *echo.Echo {
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
 
-	d0 := db.DBConnect()
-	migrations.MigrateX(d0)
-	d1 := db.DBConnect()
 	h := users.NewHandler(user.NewUserModel(d1))
 
 	e.GET("/users", h.GetIndex)
@@ -46,7 +52,6 @@ func configureEcho() *echo.Echo {
 
 	g := e.Group(authPathPrefix)
 	g.Use(wrap(http.StripPrefix(authPathPrefix, ab.Config.Core.Router)))
-
 
 	return e
 }
