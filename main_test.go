@@ -44,3 +44,9 @@ func TestLogin(t *testing.T) {
 	assert.Equal(t, http.StatusOK, c)
 	assert.NotEmpty(t, b)
 }
+
+func TestGetUsersWithSession(t *testing.T) {
+	e := configureEcho();
+	defer e.Close()
+	// todo implement
+}

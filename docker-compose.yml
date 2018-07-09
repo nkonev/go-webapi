@@ -24,10 +24,26 @@ services:
       options:
         max-size: "50m"
         max-file: "1"
+  redis:
+    image: redis:5.0-rc3
+    hostname: redis
+    container_name: redis-go-dev
+    restart: unless-stopped
+    volumes :
+      - redis_go_dev_data_dir:/data
+    networks:
+      go-dev:
+        ipv4_address: 172.24.0.3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "1"
 
 volumes:
   #enviroment
   postgresql_go_dev_data_dir:
+  redis_go_dev_data_dir:
 
 networks:
   go-dev:
