@@ -19,7 +19,7 @@ type MyServerStorer struct {
 var session_cookie = "SESSION"
 
 func (s *MyServerStorer) Load(ctx context.Context, key string) (authboss.User, error)  {
-	log.Infof("Loading user")
+	log.Infof("Loading user '%v'", key)
 	uu, e  := s.Model.FindByLogin(key)
 	if e != nil {
 		return nil, e
@@ -46,7 +46,7 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 	if e != nil {
 		if e == http.ErrNoCookie {
 			u := uuid.NewV4().String()
-			log.Infof("No cookie, creating session %v", u)
+			log.Infof("No cookie named %v, creating session %v", session_cookie, u)
 			ss := MyClientStateImpl{Id: u}
 			return &ss, nil
 		}
