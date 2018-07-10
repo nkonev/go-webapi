@@ -104,7 +104,7 @@ func (s MyClientStateImpl) Get(key string) (string, bool) {
 	if v == "" {
 		return "", false
 	} else {
-		return v, false
+		return v, true
 	}
 }
 
