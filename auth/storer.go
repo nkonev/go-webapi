@@ -31,7 +31,7 @@ func (s *MyServerStorer) Load(ctx context.Context, key string) (authboss.User, e
 }
 
 func (s *MyServerStorer) Save(ctx context.Context, user authboss.User) (error)  {
-	log.Infof("Saving session Save")
+	log.Infof("Saving user")
 	return nil // todo implement
 }
 
@@ -45,9 +45,9 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 	c, e := r.Cookie(session_cookie)
 	if e != nil {
 		if e == http.ErrNoCookie {
-			log.Infof("No cookie, creating session")
-			ss := MyClientStateImpl{Id: uuid.NewV4()}
-			log.Infof("Stored sessionId %v", ss.GetSessionId())
+			u := uuid.NewV4().String()
+			log.Infof("No cookie, creating session %v", u)
+			ss := MyClientStateImpl{Id: u}
 			return &ss, nil
 		}
 		return nil, e
@@ -55,25 +55,26 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 
 	session0 := s.Model.Redis.HGetAll(c.Value)
 	log.Infof("Loaded session %v", session0)
-	return &MyClientStateImpl{set: *session0}, nil
+	return &MyClientStateImpl{Id: c.Value, set: *session0}, nil
 }
 
 // save session to redis
 func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.ClientState, cse []authboss.ClientStateEvent) error {
-	log.Infof("Saving session WriteState: %v | %v | %v", w, cstate, cse)
 
-	m, ok := cstate.(MyClientStateImpl)
+
+	m, ok := cstate.(MyClientState)
 	if !ok {
-		errors.Errorf("Cannot cast to MyClientStateImpl")
+		return errors.Errorf("Cannot cast to MyClientState")
 	}
 	sessionId := m.GetSessionId()
+	log.Infof("Saving session %v", sessionId)
 
 	for _, e := range cse {
 		switch e.Kind {
 		case authboss.ClientStateEventPut:
 			s.Model.Redis.HSet(sessionId, e.Key, e.Value)
 		case authboss.ClientStateEventDel:
-			s.Model.Redis.HDel(e.Key)
+			s.Model.Redis.HDel(sessionId, e.Key)
 		}
 	}
 
@@ -86,7 +87,7 @@ type MyClientState interface {
 }
 
 type MyClientStateImpl struct {
-	Id uuid.UUID
+	Id string
 	set redis.StringStringMapCmd
 }
 
@@ -105,6 +106,5 @@ func (s MyClientStateImpl) Get(key string) (string, bool) {
 }
 
 func (s MyClientStateImpl) GetSessionId() string {
-	log.Infof("Getting sessionId %v", s.Id.String())
-	return s.Id.String()
+	return s.Id
 }
