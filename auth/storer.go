@@ -9,10 +9,11 @@ import (
 	"github.com/go-echo-api-test-sample/models/session"
 	"github.com/go-redis/redis"
 	"github.com/satori/go.uuid"
+	"github.com/pkg/errors"
 )
 
 type MyServerStorer struct {
-	Model user.UserModel
+	Model user.UserModelImpl
 }
 
 var session_cookie = "SESSION"
@@ -45,34 +46,32 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 	if e != nil {
 		if e == http.ErrNoCookie {
 			log.Infof("No cookie, creating session")
-			return &MyClientState{Id: uuid.NewV4()}, nil
+			ss := MyClientStateImpl{Id: uuid.NewV4()}
+			log.Infof("Stored sessionId %v", ss.GetSessionId())
+			return &ss, nil
 		}
 		return nil, e
 	}
 
 	session0 := s.Model.Redis.HGetAll(c.Value)
 	log.Infof("Loaded session %v", session0)
-	return &MyClientState{set: *session0}, nil
+	return &MyClientStateImpl{set: *session0}, nil
 }
 
 // save session to redis
 func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.ClientState, cse []authboss.ClientStateEvent) error {
 	log.Infof("Saving session WriteState: %v | %v | %v", w, cstate, cse)
 
-	// todo erase
-	/*csrw, ok :=  w.(authboss.ClientStateResponseWriter)
-	if ok {
-		log.Infof("Got ClientStateResponseWriter %v", csrw)
-	} else {
-		log.Infof("Not ok")
-	}*/
-
-	//sss, ok := cstate.(MyClientState)
+	m, ok := cstate.(MyClientStateImpl)
+	if !ok {
+		errors.Errorf("Cannot cast to MyClientStateImpl")
+	}
+	sessionId := m.GetSessionId()
 
 	for _, e := range cse {
 		switch e.Kind {
 		case authboss.ClientStateEventPut:
-			s.Model.Redis.HSet("cstate.GetId().String()", e.Key, e.Value) // todo remove field
+			s.Model.Redis.HSet(sessionId, e.Key, e.Value)
 		case authboss.ClientStateEventDel:
 			s.Model.Redis.HDel(e.Key)
 		}
@@ -81,13 +80,17 @@ func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.Clie
 	return nil
 }
 
+type MyClientState interface {
+	authboss.ClientState
+	GetSessionId() string
+}
 
-type MyClientState struct {
+type MyClientStateImpl struct {
 	Id uuid.UUID
 	set redis.StringStringMapCmd
 }
 
-func (s *MyClientState) Get(key string) (string, bool) {
+func (s MyClientStateImpl) Get(key string) (string, bool) {
 	map0, err := s.set.Result()
 	if err != nil {
 		log.Errorf("Has error during get value from HSET %v", err)
@@ -101,6 +104,7 @@ func (s *MyClientState) Get(key string) (string, bool) {
 	}
 }
 
-func (s *MyClientState) GetId() uuid.UUID {
-	return s.Id
+func (s MyClientStateImpl) GetSessionId() string {
+	log.Infof("Getting sessionId %v", s.Id.String())
+	return s.Id.String()
 }

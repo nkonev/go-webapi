@@ -12,12 +12,12 @@ type resultLists struct {
 }
 
 type handler struct {
-	UserModel user.UserModelImpl
+	UserModel user.UserModel
 }
 
 type H map[string]interface{}
 
-func NewHandler(u user.UserModelImpl) *handler {
+func NewHandler(u user.UserModel) *handler {
 	return &handler{u}
 }
 

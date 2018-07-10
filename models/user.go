@@ -7,12 +7,12 @@ import (
 )
 
 type (
-	UserModelImpl interface {
+	UserModel interface {
 		FindByID(id string) (*User, error)
 		FindAll() ([]User, error)
 	}
 
-	UserModel struct {
+	UserModelImpl struct {
 		db *sqlx.DB
 	}
 
@@ -26,13 +26,13 @@ type (
 
 )
 
-func NewUserModel(db *sqlx.DB) *UserModel {
-	return &UserModel{
+func NewUserModel(db *sqlx.DB) *UserModelImpl {
+	return &UserModelImpl{
 		db: db,
 	}
 }
 
-func (u *UserModel) FindByID(id string) (*User, error) {
+func (u *UserModelImpl) FindByID(id string) (*User, error) {
 	var users []User
 
 	err := u.db.Select(&users, "SELECT * FROM users where id = $1 limit 1", id)
@@ -45,7 +45,7 @@ func (u *UserModel) FindByID(id string) (*User, error) {
 	return &users[0], nil
 }
 
-func (u *UserModel) FindAll() ([]User, error) {
+func (u *UserModelImpl) FindAll() ([]User, error) {
 	var users []User
 	e := u.db.Select(&users, "SELECT * FROM users order by id asc")
 	if e != nil {
@@ -55,7 +55,7 @@ func (u *UserModel) FindAll() ([]User, error) {
 	return users, nil
 }
 
-func (u *UserModel) FindByLogin(login string) (*User, error) {
+func (u *UserModelImpl) FindByLogin(login string) (*User, error) {
 	var users []User
 
 	err := u.db.Select(&users, "SELECT * FROM users where name = $1 limit 1", login)
