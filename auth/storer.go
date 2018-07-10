@@ -7,7 +7,6 @@ import (
 	"github.com/go-echo-api-test-sample/models/user"
 	"net/http"
 	"github.com/go-echo-api-test-sample/models/session"
-	"github.com/go-redis/redis"
 	"github.com/satori/go.uuid"
 	"github.com/pkg/errors"
 )
@@ -47,15 +46,18 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 		if e == http.ErrNoCookie {
 			u := uuid.NewV4().String()
 			log.Infof("No cookie named %v, creating session %v", session_cookie, u)
-			ss := MyClientStateImpl{Id: u}
+			ss := MyClientStateImpl{id: u}
 			return &ss, nil
 		}
 		return nil, e
 	}
 
-	session0 := s.Model.Redis.HGetAll(c.Value)
-	log.Infof("Loaded session %v", session0)
-	return &MyClientStateImpl{Id: c.Value, set: *session0}, nil
+	kv, e := s.Model.Redis.HGetAll(c.Value).Result()
+	if e != nil {
+		log.Panicf("Cannot deserialize map %v", e)
+	}
+	log.Infof("Loaded session %v", kv)
+	return &MyClientStateImpl{id: c.Value, kv: kv}, nil
 }
 
 // save session to redis
@@ -93,17 +95,12 @@ type MyClientState interface {
 }
 
 type MyClientStateImpl struct {
-	Id string
-	set redis.StringStringMapCmd
+	id string
+	kv map[string]string
 }
 
 func (s MyClientStateImpl) Get(key string) (string, bool) {
-	map0, err := s.set.Result()
-	if err != nil {
-		log.Errorf("Has error during get value from HSET %v", err)
-		return "", false
-	}
-	v := map0[key]
+	v := s.kv[key]
 	if v == "" {
 		return "", false
 	} else {
@@ -112,5 +109,5 @@ func (s MyClientStateImpl) Get(key string) (string, bool) {
 }
 
 func (s MyClientStateImpl) GetSessionId() string {
-	return s.Id
+	return s.id
 }
