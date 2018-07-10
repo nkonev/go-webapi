@@ -19,7 +19,7 @@ type MyServerStorer struct {
 var session_cookie = "SESSION"
 
 func (s *MyServerStorer) Load(ctx context.Context, key string) (authboss.User, error)  {
-	log.Infof("Loading user '%v'", key)
+	log.Infof("Try to find user '%v'", key)
 	uu, e  := s.Model.FindByLogin(key)
 	if e != nil {
 		return nil, e
