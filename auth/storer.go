@@ -46,7 +46,7 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 		if e == http.ErrNoCookie {
 			u := uuid.NewV4().String()
 			log.Infof("No cookie named %v, creating session %v", session_cookie, u)
-			ss := MyClientStateImpl{id: u}
+			ss := MyClientSessionImpl{id: u}
 			return &ss, nil
 		}
 		return nil, e
@@ -57,15 +57,15 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 		log.Panicf("Cannot deserialize map %v", e)
 	}
 	log.Infof("Loaded session %v", kv)
-	return &MyClientStateImpl{id: c.Value, kv: kv}, nil
+	return &MyClientSessionImpl{id: c.Value, kv: kv}, nil
 }
 
 // save session to redis
 func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.ClientState, cse []authboss.ClientStateEvent) error {
 
-	m, ok := cstate.(MyClientState)
+	m, ok := cstate.(MyClientSession)
 	if !ok {
-		return errors.Errorf("Cannot cast to MyClientState")
+		return errors.Errorf("Cannot cast to MyClientSession")
 	}
 
 	sessionId := m.GetSessionId()
@@ -89,18 +89,18 @@ func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.Clie
 	return nil
 }
 
-type MyClientState interface {
+type MyClientSession interface {
 	authboss.ClientState
 
 	GetSessionId() string
 }
 
-type MyClientStateImpl struct {
+type MyClientSessionImpl struct {
 	id string
 	kv map[string]string
 }
 
-func (s MyClientStateImpl) Get(key string) (string, bool) {
+func (s MyClientSessionImpl) Get(key string) (string, bool) {
 	v := s.kv[key]
 	if v == "" {
 		return "", false
@@ -109,6 +109,6 @@ func (s MyClientStateImpl) Get(key string) (string, bool) {
 	}
 }
 
-func (s MyClientStateImpl) GetSessionId() string {
+func (s MyClientSessionImpl) GetSessionId() string {
 	return s.id
 }
