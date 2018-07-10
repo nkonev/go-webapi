@@ -61,11 +61,11 @@ func (s *MySessionStorer) ReadState(r *http.Request) (authboss.ClientState, erro
 // save session to redis
 func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.ClientState, cse []authboss.ClientStateEvent) error {
 
-
 	m, ok := cstate.(MyClientState)
 	if !ok {
 		return errors.Errorf("Cannot cast to MyClientState")
 	}
+
 	sessionId := m.GetSessionId()
 	log.Infof("Saving session %v", sessionId)
 
@@ -77,6 +77,12 @@ func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.Clie
 			s.Model.Redis.HDel(sessionId, e.Key)
 		}
 	}
+
+	c := &http.Cookie{
+		Name: session_cookie,
+		Value: sessionId,
+	}
+	http.SetCookie(w, c)
 
 	return nil
 }
