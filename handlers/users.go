@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	"github.com/go-echo-api-test-sample/models"
+	"github.com/go-echo-api-test-sample/models/user"
 )
 
 type resultLists struct {

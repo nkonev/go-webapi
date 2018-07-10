@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/labstack/echo"
 	"github.com/go-echo-api-test-sample/handlers"
-	"github.com/go-echo-api-test-sample/models"
+	"github.com/go-echo-api-test-sample/models/user"
 	"github.com/go-echo-api-test-sample/db"
 	"github.com/go-echo-api-test-sample/migrations"
 	"os"

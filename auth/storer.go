@@ -4,7 +4,7 @@ import (
 	"github.com/volatiletech/authboss"
 	"context"
 	"github.com/labstack/gommon/log"
-	"github.com/go-echo-api-test-sample/models"
+	"github.com/go-echo-api-test-sample/models/user"
 	"net/http"
 	"github.com/go-echo-api-test-sample/models/session"
 	"github.com/go-redis/redis"
@@ -16,7 +16,7 @@ type MyServerStorer struct {
 	Model user.UserModelImpl
 }
 
-var session_cookie = "SESSION"
+const session_cookie = "SESSION"
 
 func (s *MyServerStorer) Load(ctx context.Context, key string) (authboss.User, error)  {
 	log.Infof("Try to find user '%v'", key)
