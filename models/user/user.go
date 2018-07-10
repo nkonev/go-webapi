@@ -19,7 +19,7 @@ type (
 	User struct {
 		ID   int    `json:"id" db:"id"`
 		Name string `json:"name" db:"name"`
-		Password string
+		Password string `json:"-"`
 		Surname string
 		Lastname string
 	}
