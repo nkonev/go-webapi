@@ -61,10 +61,10 @@ func configureEcho() *echo.Echo {
 }
 
 func wrap(h http.Handler, ab *authboss.Authboss) echo.MiddlewareFunc {
-	h2 := ab.LoadClientStateMiddleware(h)
+	clientStateMiddleware := ab.LoadClientStateMiddleware(h)
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			h2.ServeHTTP(c.Response(), c.Request())
+			clientStateMiddleware.ServeHTTP(c.Response(), c.Request())
 			return next(c)
 		}
 	}
