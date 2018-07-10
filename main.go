@@ -35,7 +35,7 @@ func configureEcho() *echo.Echo {
 
 	ab := authboss.New()
 	ab.Config.Core.ViewRenderer = defaults.JSONRenderer{}
-	ab.Config.Storage.Server = &auth.MyServerStorer{Model:*m}
+	ab.Config.Storage.Server = &auth.MyUserStorer{Model:*m}
 	ab.Config.Storage.SessionState = &auth.MySessionStorer{Model: sm}
 	//ab.Config.Storage.CookieState = myCookieImplementation //todo implement
 	defaults.SetCore(&ab.Config, true, true)

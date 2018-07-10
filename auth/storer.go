@@ -11,13 +11,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type MyServerStorer struct {
+type MyUserStorer struct {
 	Model user.UserModelImpl
 }
 
 const session_cookie = "SESSION"
 
-func (s *MyServerStorer) Load(ctx context.Context, key string) (authboss.User, error)  {
+func (s *MyUserStorer) Load(ctx context.Context, key string) (authboss.User, error)  {
 	log.Infof("Try to find user '%v'", key)
 	uu, e  := s.Model.FindByLogin(key)
 	if e != nil {
@@ -29,7 +29,7 @@ func (s *MyServerStorer) Load(ctx context.Context, key string) (authboss.User, e
 	return uu, nil
 }
 
-func (s *MyServerStorer) Save(ctx context.Context, user authboss.User) (error)  {
+func (s *MyUserStorer) Save(ctx context.Context, user authboss.User) (error)  {
 	log.Infof("Saving user")
 	return nil // todo implement
 }
