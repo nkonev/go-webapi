@@ -91,6 +91,7 @@ func (s *MySessionStorer) WriteState(w http.ResponseWriter, cstate authboss.Clie
 
 type MyClientState interface {
 	authboss.ClientState
+
 	GetSessionId() string
 }
 
