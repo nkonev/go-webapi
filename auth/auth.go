@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/go-echo-api-test-sample/models/user"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
 const SESSION_COOKIE  = "SESSION";
@@ -32,6 +33,7 @@ func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel sess
 
 	kv, e := sessionModel.Redis.HGetAll(c.Value).Result()
 	if e != nil {
+		log.Errorf("Error during get session")
 		return e
 	}
 	log.Infof("Loaded session %v", kv)
@@ -66,7 +68,13 @@ func LoginManager(context echo.Context, sessionModel session.SessionModel, userM
 
 	sessionId := uuid.NewV4().String()
 	log.Infof("Saving session %v", sessionId)
-	sessionModel.Redis.HSet(sessionId, "login", m.Username)
+	cmd := sessionModel.Redis.HSet(sessionId, "login", m.Username)
+	d, _ := time.ParseDuration("30m")
+	sessionModel.Redis.Expire(sessionId, d)
+	if cmd.Err() != nil {
+		log.Errorf("Error during save session")
+		return cmd.Err()
+	}
 
 	c := &http.Cookie{
 		Name: SESSION_COOKIE,
