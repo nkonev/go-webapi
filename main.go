@@ -12,7 +12,6 @@ import (
 	"context"
 	"time"
 	"github.com/labstack/echo/middleware"
-	_ "github.com/volatiletech/authboss/auth"
 	"github.com/go-echo-api-test-sample/auth"
 	"github.com/go-echo-api-test-sample/models/session"
 )

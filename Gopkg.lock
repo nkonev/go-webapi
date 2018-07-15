@@ -39,12 +39,6 @@
   version = "v6.12.0"
 
 [[projects]]
-  name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
   packages = [
@@ -131,15 +125,6 @@
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
 
 [[projects]]
-  name = "github.com/volatiletech/authboss"
-  packages = [
-    ".",
-    "auth"
-  ]
-  revision = "89dc3b4d380d7d3bbe74df324480c09d916c092b"
-  version = "v2.0.0-rc5"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -152,41 +137,9 @@
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/net"
-  packages = [
-    "context",
-    "context/ctxhttp"
-  ]
-  revision = "ed29d75add3d7c4bf7ca65aac0c6df3d1420216f"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/oauth2"
-  packages = [
-    ".",
-    "internal"
-  ]
-  revision = "ef147856a6ddbb60760db74283d2424e98c87bff"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
   revision = "7138fd3d9dc8335c567ca206f4333fb75eb05d56"
-
-[[projects]]
-  name = "google.golang.org/appengine"
-  packages = [
-    "internal",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/remote_api",
-    "internal/urlfetch",
-    "urlfetch"
-  ]
-  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
-  version = "v1.1.0"
 
 [[projects]]
   name = "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -197,6 +150,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "32b6bfbf6b9e436848cb961c7d39e877221d69df02e78ad8135ad66debc9bec8"
+  inputs-digest = "bb5002241972a7e8fe999bd56e140c3be62404de1f5b36d8a0a2b44635ef51b6"
   solver-name = "gps-cdcl"
   solver-version = 1
