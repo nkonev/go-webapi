@@ -10,6 +10,7 @@ type (
 	UserModel interface {
 		FindByID(id string) (*User, error)
 		FindAll() ([]User, error)
+		FindByLogin(login string) (*User, error)
 	}
 
 	UserModelImpl struct {

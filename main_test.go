@@ -13,6 +13,10 @@ import (
 
 func request(method, path string, body io.Reader, e *echo.Echo) (int, string, http.Header) {
 	req := test.NewRequest(method, path, body)
+	Header := map[string][]string{
+		echo.HeaderContentType: {"application/json"},
+	}
+	req.Header = Header
 	rec := test.NewRecorder()
 	e.ServeHTTP(rec, req)
 	return rec.Code, rec.Body.String(), rec.HeaderMap

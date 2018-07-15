@@ -12,10 +12,7 @@ import (
 	"context"
 	"time"
 	"github.com/labstack/echo/middleware"
-	"github.com/volatiletech/authboss"
-	"github.com/volatiletech/authboss/defaults"
 	_ "github.com/volatiletech/authboss/auth"
-	"net/http"
 	"github.com/go-echo-api-test-sample/auth"
 	"github.com/go-echo-api-test-sample/models/session"
 )
@@ -25,51 +22,41 @@ func configureEcho() *echo.Echo {
 	migrations.MigrateX(d0)
 	d1 := db.DBConnect()
 	m := user.NewUserModel(d1)
+	h := users.NewHandler(m)
 
 	r := db.Connect()
 	sm := session.SessionModel{Redis: *r}
 
 	log.SetOutput(os.Stdout)
 
-	authPathPrefix := "/auth2"
-
-	ab := authboss.New()
-	ab.Config.Core.ViewRenderer = defaults.JSONRenderer{}
-	ab.Config.Storage.Server = &auth.MyUserStorer{Model:*m}
-	ab.Config.Storage.SessionState = &auth.MySessionStorer{Model: sm}
-	//ab.Config.Storage.CookieState = myCookieImplementation //todo implement
-	defaults.SetCore(&ab.Config, true, true)
-	if err := ab.Init("auth"); err != nil {
-		log.Panic(err)
-	}
-
 	e := echo.New()
 
+	e.Use(getAuthMiddleware(sm, []string{"/user.*", "/auth2/.*"}))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
 
-	h := users.NewHandler(user.NewUserModel(d1))
-
-	e.GET("/users", h.GetIndex)
+	e.POST("/auth2/login", getLogin(sm, m))
 	e.GET("/users/:id", h.GetDetail)
-
-	g := e.Group(authPathPrefix)
-	g.Use(wrap(http.StripPrefix(authPathPrefix, ab.Config.Core.Router), ab))
+	e.GET("/users", h.GetIndex)
 
 	return e
 }
 
-func wrap(h http.Handler, ab *authboss.Authboss) echo.MiddlewareFunc {
-	clientStateMiddleware := ab.LoadClientStateMiddleware(h)
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			clientStateMiddleware.ServeHTTP(c.Response(), c.Request())
-			return next(c)
-		}
+func getLogin(sessionModel session.SessionModel, userModel *user.UserModelImpl) echo.HandlerFunc {
+	return func (context echo.Context) error {
+		return auth.LoginManager(context, sessionModel, userModel)
 	}
 }
 
+
+func getAuthMiddleware(sm session.SessionModel, whitelist []string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			return auth.CheckSession(c, next, sm, whitelist);
+		}
+	}
+}
 
 func main() {
 	e := configureEcho()

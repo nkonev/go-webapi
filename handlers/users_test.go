@@ -20,6 +20,12 @@ func (u *UsersModelStub) FindByID(id string) (*user.User, error) {
 		Name: "foo",
 	}, nil
 }
+func (u *UsersModelStub) FindByLogin(id string) (*user.User, error) {
+	return &user.User{
+		ID:   1,
+		Name: "foo",
+	}, nil
+}
 func (u *UsersModelStub) FindAll() ([]user.User, error) {
 	users := []user.User{}
 	users = append(users, user.User{
