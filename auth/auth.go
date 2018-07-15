@@ -67,9 +67,10 @@ func LoginManager(context echo.Context, sessionModel session.SessionModel, userM
 	}
 
 	sessionId := uuid.NewV4().String()
-	log.Infof("Saving session %v", sessionId)
+	ttl := "30m"
+	log.Infof("Saving session %v with duration %v", sessionId, ttl)
 	cmd := sessionModel.Redis.HSet(sessionId, "login", m.Username)
-	d, _ := time.ParseDuration("30m")
+	d, _ := time.ParseDuration(ttl)
 	sessionModel.Redis.Expire(sessionId, d)
 	if cmd.Err() != nil {
 		log.Errorf("Error during save session")
