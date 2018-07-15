@@ -39,6 +39,7 @@ func configureEcho() *echo.Echo {
 	e.POST("/auth2/login", getLogin(sm, m))
 	e.GET("/users/:id", h.GetDetail)
 	e.GET("/users", h.GetIndex)
+	e.GET("/profile", h.GetProfile)
 
 	return e
 }

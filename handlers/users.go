@@ -40,3 +40,7 @@ func (h *handler) GetDetail(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, u)
 }
+
+func (h *handler) GetProfile(c echo.Context) error {
+	return c.JSON(http.StatusOK, H{"message": "You see your profile"})
+}
