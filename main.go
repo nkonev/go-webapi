@@ -14,16 +14,33 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/go-echo-api-test-sample/auth"
 	"github.com/go-echo-api-test-sample/models/session"
+	"github.com/spf13/viper"
+	"fmt"
 )
 
 func configureEcho() *echo.Echo {
-	d0 := db.DBConnect()
+	viper.SetConfigName("config")
+	viper.AddConfigPath("./config")   // path to look for the config file in
+	viper.AddConfigPath("./development")  // call multiple times to add many search paths
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil { // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	redisAddr := viper.GetString("redis.addr")
+	redisPassword := viper.GetString("redis.password")
+	redisDbNum := viper.GetInt("redis.db")
+	redisFlushOnStart := viper.GetBool("redis.flushOnStart")
+
+	postgresqlConnectString := viper.GetString("postgresql.connectString")
+
+	d0 := db.ConnectDb(postgresqlConnectString)
 	migrations.MigrateX(d0)
-	d1 := db.DBConnect()
+	d1 := db.ConnectDb(postgresqlConnectString)
 	m := user.NewUserModel(d1)
 	h := users.NewHandler(m)
 
-	r := db.Connect()
+	r := db.ConnectRedis(redisAddr, redisPassword, redisDbNum, redisFlushOnStart)
 	sm := session.SessionModel{Redis: *r}
 
 	log.SetOutput(os.Stdout)
@@ -39,6 +56,7 @@ func configureEcho() *echo.Echo {
 	e.GET("/users/:id", h.GetDetail)
 	e.GET("/users", h.GetIndex)
 	e.GET("/profile", h.GetProfile)
+	e.POST("/register", h.Register)
 
 	return e
 }

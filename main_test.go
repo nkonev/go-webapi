@@ -74,3 +74,12 @@ func TestLoginFail(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, c)// todo
 	assert.Empty(t, hm.Get("Set-Cookie"))
 }
+
+func TestRegister(t *testing.T) {
+	e := configureEcho();
+	defer e.Close()
+
+	c, _, hm := request("POST", "/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
+	assert.Equal(t, http.StatusOK, c)
+	assert.Empty(t, hm.Get("Set-Cookie"))
+}
