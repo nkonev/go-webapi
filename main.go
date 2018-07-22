@@ -21,7 +21,9 @@ import (
 func configureEcho() *echo.Echo {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./config")   // path to look for the config file in
-	viper.AddConfigPath("./development")  // call multiple times to add many search paths
+	viper.AddConfigPath("./config-dev")  // call multiple times to add many search paths
+	viper.SetEnvPrefix("GO_EXAMPLE")
+	viper.AutomaticEnv()
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil { // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
@@ -33,10 +35,12 @@ func configureEcho() *echo.Echo {
 	redisFlushOnStart := viper.GetBool("redis.flushOnStart")
 
 	postgresqlConnectString := viper.GetString("postgresql.connectString")
+	maxPostgreConns := viper.GetInt("maxOpenConnections")
+	minPostgreConns := viper.GetInt("minOpenConnections")
 
-	d0 := db.ConnectDb(postgresqlConnectString)
+	d0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	migrations.MigrateX(d0)
-	d1 := db.ConnectDb(postgresqlConnectString)
+	d1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	m := user.NewUserModel(d1)
 	h := users.NewHandler(m)
 
