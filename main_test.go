@@ -79,7 +79,7 @@ func TestRegister(t *testing.T) {
 	e := configureEcho();
 	defer e.Close()
 
-	c, _, hm := request("POST", "/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
+	c, _, hm := request("POST", "/auth2/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
 	assert.Equal(t, http.StatusOK, c)
 	assert.Empty(t, hm.Get("Set-Cookie"))
 }

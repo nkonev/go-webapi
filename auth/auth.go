@@ -15,18 +15,24 @@ import (
 
 const SESSION_COOKIE  = "SESSION";
 
+func checkUrlInWhitelist(whitelist []string, uri string) bool {
+	for _, regexp0 := range whitelist {
+		r, _ := regexp.Compile(regexp0) //todo optimize
+		if r.MatchString(uri) {
+			log.Infof("Skipping authentication for %v", regexp0)
+			return true
+		}
+	}
+	return false
+}
+
 func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel session.SessionModel, whitelist []string) error {
+	if checkUrlInWhitelist(whitelist, context.Request().RequestURI){
+		return next(context)
+	}
+
 	c, e := context.Request().Cookie(SESSION_COOKIE)
 	if e != nil {
-		if e == http.ErrNoCookie{
-			for _, regexp0 := range whitelist {
-				r, _ := regexp.Compile(regexp0) //todo optimize
-				if r.MatchString(context.Request().RequestURI) {
-					log.Infof("Skipping authentication for %v", regexp0)
-					return next(context)
-				}
-			}
-		}
 		log.Errorf("Error get %v cookie", SESSION_COOKIE)
 		return e
 	}
