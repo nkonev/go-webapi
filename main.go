@@ -38,6 +38,13 @@ func configureEcho() *echo.Echo {
 	maxPostgreConns := viper.GetInt("maxOpenConnections")
 	minPostgreConns := viper.GetInt("minOpenConnections")
 
+	fromAddress := viper.GetString("mail.registration.fromAddress")
+	subject := viper.GetString("mail.registration.subject")
+	bodyTemplate := viper.GetString("mail.registration.body.template")
+	smtpHostPort := viper.GetString("mail.smtp.address")
+	smtpUserName := viper.GetString("mail.smtp.username")
+	smtpPassword := viper.GetString("mail.smtp.password")
+
 	d0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	migrations.MigrateX(d0)
 	d1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
@@ -60,7 +67,7 @@ func configureEcho() *echo.Echo {
 	e.GET("/users/:id", h.GetDetail)
 	e.GET("/users", h.GetIndex)
 	e.GET("/profile", h.GetProfile)
-	e.POST("/register", h.Register)
+	e.POST("/auth2/register", h.Register(fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword))
 
 	return e
 }

@@ -5,6 +5,9 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/go-echo-api-test-sample/models/user"
+	"github.com/go-echo-api-test-sample/services"
+	"github.com/satori/go.uuid"
+	"strings"
 )
 
 type resultLists struct {
@@ -22,8 +25,8 @@ func NewHandler(u user.UserModel) *handler {
 }
 
 type RegisterDTO struct {
-	usernamed string
-	password string
+	Username string // email
+	Password string
 }
 
 func (h *handler) GetIndex(c echo.Context) error {
@@ -50,10 +53,15 @@ func (h *handler) GetProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, H{"message": "You see your profile"})
 }
 
-func (h *handler) Register(context echo.Context) error {
-	d := &RegisterDTO{}
-	if err := context.Bind(d); err != nil {
-		return err
+func (h *handler) Register(fromAdress string, subject string, bodyTemplate string, smtpHostPort string, smtpUserName string, smtpPassword string) func (context echo.Context) error {
+	return func (context echo.Context) error {
+		d := &RegisterDTO{}
+		if err := context.Bind(d); err != nil {
+			return err
+		}
+
+		body := strings.Replace(bodyTemplate, "__uuid__", uuid.NewV4().String(), 1)
+		services.SendMail(fromAdress, d.Username, subject, body, smtpHostPort, smtpUserName, smtpPassword)
+		return context.JSON(http.StatusOK, H{"message": "You successful registered"})
 	}
-	return context.JSON(http.StatusOK, H{"message": "You successful registered"})
 }

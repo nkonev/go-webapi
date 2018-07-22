@@ -36,6 +36,9 @@ func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel sess
 		log.Errorf("Error during get session")
 		return e
 	}
+	if len(kv) == 0 {
+		return errors.Errorf("Got empty session from redis")
+	}
 	log.Infof("Loaded session %v", kv)
 
 	return next(context)
