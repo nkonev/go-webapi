@@ -14,3 +14,11 @@ GO_EXAMPLE_POSTGRESQL.CONNECTSTRING=host=172.24.0.2 user=postgres password=postg
 ```bash
 curl -v -X POST -H "Content-Type: application/json" -d '{"username": "nikit.cpp@yandex.ru", "password": "password"}' http://127.0.0.1:1234/auth2/register
 ```
+
+```bash
+go get github.com/vektra/mockery/.../
+```
+
+```bash
+(cd services/; mockery -name=Mailer)
+```

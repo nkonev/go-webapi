@@ -16,9 +16,10 @@ import (
 	"github.com/go-echo-api-test-sample/models/session"
 	"github.com/spf13/viper"
 	"fmt"
+	"github.com/go-echo-api-test-sample/services"
 )
 
-func configureEcho() *echo.Echo {
+func configureEcho(mailer services.Mailer) *echo.Echo {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./config")   // path to look for the config file in
 	viper.AddConfigPath("./config-dev")  // call multiple times to add many search paths
@@ -67,7 +68,7 @@ func configureEcho() *echo.Echo {
 	e.GET("/users/:id", h.GetDetail)
 	e.GET("/users", h.GetIndex)
 	e.GET("/profile", h.GetProfile)
-	e.POST("/auth2/register", h.Register(fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword))
+	e.POST("/auth2/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword))
 
 	return e
 }
@@ -88,7 +89,7 @@ func getAuthMiddleware(sm session.SessionModel, whitelist []string) echo.Middlew
 }
 
 func main() {
-	e := configureEcho()
+	e := configureEcho(&services.MailerImpl{})
 
 	log.Info("Starting server")
 	// Start server

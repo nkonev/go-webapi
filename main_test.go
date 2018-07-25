@@ -9,6 +9,8 @@ import (
 	"io"
 	"strings"
 	"github.com/go-echo-api-test-sample/auth"
+	"github.com/go-echo-api-test-sample/services/mocks"
+	"github.com/stretchr/testify/mock"
 )
 
 
@@ -33,7 +35,8 @@ func getSession(headers http.Header) string {
 }
 
 func TestUsers(t *testing.T) {
-	e := configureEcho();
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
 	defer e.Close()
 
 	c, b, _ := request("GET", "/users", nil, e, "")
@@ -42,7 +45,8 @@ func TestUsers(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	e := configureEcho();
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
 	defer e.Close()
 
 	c, b, _ := request("GET", "/users/1", nil, e, "")
@@ -51,7 +55,8 @@ func TestUser(t *testing.T) {
 }
 
 func TestLoginSuccess(t *testing.T) {
-	e := configureEcho();
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
 	defer e.Close()
 
 	c, _, hm := request("POST", "/auth2/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
@@ -67,7 +72,8 @@ func TestLoginSuccess(t *testing.T) {
 }
 
 func TestLoginFail(t *testing.T) {
-	e := configureEcho();
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
 	defer e.Close()
 
 	c, _, hm := request("POST", "/auth2/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
@@ -76,10 +82,14 @@ func TestLoginFail(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	e := configureEcho();
+	m := &mocks.Mailer{}
+	m.On("SendMail", "from@yandex.ru", "root@yandex.ru", "registration confirmation", mock.AnythingOfType("string"), "smtp.yandex.ru:465", "username", "password")
+	e := configureEcho(m);
 	defer e.Close()
 
 	c, _, hm := request("POST", "/auth2/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
 	assert.Equal(t, http.StatusOK, c)
 	assert.Empty(t, hm.Get("Set-Cookie"))
+
+	m.AssertExpectations(t)
 }

@@ -53,7 +53,7 @@ func (h *handler) GetProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, H{"message": "You see your profile"})
 }
 
-func (h *handler) Register(fromAdress string, subject string, bodyTemplate string, smtpHostPort string, smtpUserName string, smtpPassword string) func (context echo.Context) error {
+func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string, smtpHostPort string, smtpUserName string, smtpPassword string) func (context echo.Context) error {
 	return func (context echo.Context) error {
 		d := &RegisterDTO{}
 		if err := context.Bind(d); err != nil {
@@ -61,7 +61,7 @@ func (h *handler) Register(fromAdress string, subject string, bodyTemplate strin
 		}
 
 		body := strings.Replace(bodyTemplate, "__uuid__", uuid.NewV4().String(), 1)
-		services.SendMail(fromAdress, d.Username, subject, body, smtpHostPort, smtpUserName, smtpPassword)
+		m.SendMail(fromAdress, d.Username, subject, body, smtpHostPort, smtpUserName, smtpPassword)
 		return context.JSON(http.StatusOK, H{"message": "You successful registered"})
 	}
 }

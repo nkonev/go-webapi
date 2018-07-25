@@ -9,9 +9,15 @@ import (
 	"crypto/tls"
 )
 
+type Mailer interface {
+	SendMail(fromAddress string, toAddress string, subject string, body string, smtpHostPort string, username string, password string)
+}
+
+type MailerImpl struct{}
+
 // SSL/TLS Email Example
 // https://gist.github.com/chrisgillis/10888032
-func SendMail(fromAddress string, toAddress string, subject string, body string, smtpHostPort string, username string, password string) {
+func (*MailerImpl) SendMail(fromAddress string, toAddress string, subject string, body string, smtpHostPort string, username string, password string) {
 
 	from := mail.Address{"", fromAddress}
 	to   := mail.Address{"", toAddress}
