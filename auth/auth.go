@@ -15,10 +15,9 @@ import (
 
 const SESSION_COOKIE  = "SESSION";
 
-func checkUrlInWhitelist(whitelist []string, uri string) bool {
+func checkUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
-		r, _ := regexp.Compile(regexp0) //todo optimize
-		if r.MatchString(uri) {
+		if regexp0.MatchString(uri) {
 			log.Infof("Skipping authentication for %v", regexp0)
 			return true
 		}
@@ -26,7 +25,7 @@ func checkUrlInWhitelist(whitelist []string, uri string) bool {
 	return false
 }
 
-func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel session.SessionModel, whitelist []string) error {
+func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel session.SessionModel, whitelist []regexp.Regexp) error {
 	if checkUrlInWhitelist(whitelist, context.Request().RequestURI){
 		return next(context)
 	}

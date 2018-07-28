@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/viper"
 	"fmt"
 	"github.com/go-echo-api-test-sample/services"
+	"regexp"
 )
 
 func configureEcho(mailer services.Mailer) *echo.Echo {
@@ -59,7 +60,7 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 
 	e := echo.New()
 
-	e.Use(getAuthMiddleware(sm, []string{"/user.*", "/auth2/.*"}))
+	e.Use(getAuthMiddleware(sm, stringsToRegexpArray("/user.*", "/auth2/.*")))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
@@ -73,6 +74,19 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	return e
 }
 
+func stringsToRegexpArray(strings... string) []regexp.Regexp {
+	regexps := make([]regexp.Regexp, len(strings))
+	for i, str := range strings {
+		r, err := regexp.Compile(str)
+		if err != nil {
+			panic(err)
+		} else {
+			regexps[i] = *r;
+		}
+	}
+	return regexps
+}
+
 func getLogin(sessionModel session.SessionModel, userModel *user.UserModelImpl) echo.HandlerFunc {
 	return func (context echo.Context) error {
 		return auth.LoginManager(context, sessionModel, userModel)
@@ -80,7 +94,7 @@ func getLogin(sessionModel session.SessionModel, userModel *user.UserModelImpl) 
 }
 
 
-func getAuthMiddleware(sm session.SessionModel, whitelist []string) echo.MiddlewareFunc {
+func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			return auth.CheckSession(c, next, sm, whitelist);
