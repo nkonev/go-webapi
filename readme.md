@@ -31,3 +31,8 @@ go get github.com/vektra/mockery/.../
 ```bash
 dep ensure -add github.com/gobuffalo/packr@1.12.0
 ```
+
+Packed build
+```bash
+go run vendor/github.com/gobuffalo/packr/packr/main.go build
+```
