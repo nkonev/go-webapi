@@ -53,14 +53,14 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 
 	url := viper.GetString("url")
 
-	d0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
-	db.MigrateX(d0, dropObjects, dropObjectsSql)
-	d1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
-	m := user.NewUserModel(d1)
-	h := users.NewHandler(m)
+	db0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
+	db.MigrateX(db0, dropObjects, dropObjectsSql)
+	db1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
+	userModel := user.NewUserModel(db1)
+	usersHandler := users.NewHandler(userModel)
 
-	r := db.ConnectRedis(redisAddr, redisPassword, redisDbNum, redisFlushOnStart)
-	sm := session.SessionModel{Redis: *r}
+	redis := db.ConnectRedis(redisAddr, redisPassword, redisDbNum, redisFlushOnStart)
+	sessionModel := session.SessionModel{Redis: *redis}
 
 	log.SetOutput(os.Stdout)
 
@@ -68,16 +68,16 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 
 	e := echo.New()
 
-	e.Use(getAuthMiddleware(sm, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*")))
+	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*")))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
 
-	e.POST("/auth/login", getLogin(sm, m))
-	e.GET("/users/:id", h.GetDetail)
-	e.GET("/users", h.GetIndex)
-	e.GET("/profile", h.GetProfile)
-	e.POST("/auth/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, r))
+	e.POST("/auth/login", getLogin(sessionModel, userModel))
+	e.GET("/users/:id", usersHandler.GetDetail)
+	e.GET("/users", usersHandler.GetIndex)
+	e.GET("/profile", usersHandler.GetProfile)
+	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis))
 
 	e.Pre(getStaticMiddleware(static))
 
