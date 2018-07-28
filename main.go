@@ -88,7 +88,7 @@ func getStaticMiddleware(box packr.Box) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || strings.Index(reqUrl, "/assets") == 0 {
+			if reqUrl == "/" || reqUrl == "/index.html" || strings.HasPrefix(reqUrl, "/assets") {
 				http.FileServer(box).
 					ServeHTTP(c.Response().Writer, c.Request())
 				return nil
