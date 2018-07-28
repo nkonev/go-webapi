@@ -17,6 +17,9 @@ import (
 	"fmt"
 	"github.com/go-echo-api-test-sample/services"
 	"regexp"
+	"github.com/gobuffalo/packr"
+	"net/http"
+	"strings"
 )
 
 func configureEcho(mailer services.Mailer) *echo.Echo {
@@ -61,9 +64,11 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 
 	log.SetOutput(os.Stdout)
 
+	static := packr.NewBox("./static")
+
 	e := echo.New()
 
-	e.Use(getAuthMiddleware(sm, stringsToRegexpArray("/user.*", "/auth2/.*")))
+	e.Use(getAuthMiddleware(sm, stringsToRegexpArray("/user.*", "/auth2/.*", "/static.*")))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
@@ -74,7 +79,24 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	e.GET("/profile", h.GetProfile)
 	e.POST("/auth2/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, r))
 
+	e.Pre(getStaticMiddleware(static))
+
 	return e
+}
+
+func getStaticMiddleware(box packr.Box) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			reqUrl := c.Request().RequestURI
+			if reqUrl == "/" || reqUrl == "/index.html" || strings.Index(reqUrl, "/assets") == 0 {
+				http.FileServer(box).
+					ServeHTTP(c.Response().Writer, c.Request())
+				return nil
+			} else {
+				return next(c)
+			}
+		}
+	}
 }
 
 func stringsToRegexpArray(strings... string) []regexp.Regexp {

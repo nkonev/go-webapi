@@ -93,3 +93,34 @@ func TestRegister(t *testing.T) {
 
 	m.AssertExpectations(t)
 }
+
+
+
+func TestStaticIndex(t *testing.T) {
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
+	defer e.Close()
+
+	c, _, _ := request("GET", "/index.html", nil, e, "")
+	assert.Equal(t, http.StatusMovedPermanently, c)
+}
+
+func TestStaticRoot(t *testing.T) {
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
+	defer e.Close()
+
+	c, b, _ := request("GET", "/", nil, e, "")
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, "Hello, world!", b)
+}
+
+func TestStaticAssets(t *testing.T) {
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
+	defer e.Close()
+
+	c, b, _ := request("GET", "/assets/main.js", nil, e, "")
+	assert.Equal(t, http.StatusOK, c)
+	assert.Equal(t, `console.log("Hello world");`, b)
+}
