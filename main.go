@@ -47,6 +47,8 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	smtpUserName := viper.GetString("mail.smtp.username")
 	smtpPassword := viper.GetString("mail.smtp.password")
 
+	url := viper.GetString("url")
+
 	d0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	migrations.MigrateX(d0)
 	d1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
@@ -69,7 +71,7 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	e.GET("/users/:id", h.GetDetail)
 	e.GET("/users", h.GetIndex)
 	e.GET("/profile", h.GetProfile)
-	e.POST("/auth2/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword))
+	e.POST("/auth2/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, r))
 
 	return e
 }

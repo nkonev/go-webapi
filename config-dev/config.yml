@@ -10,13 +10,16 @@ postgresql:
   connectString: "host=172.24.0.2 user=postgres password=postgresqlPassword dbname=postgres connect_timeout=2 statement_timeout=2000 sslmode=disable"
   maxOpenConnections: 8
   maxIdleConnections: 2
+  # TODO drop before migration
 
 mail:
   registration:
     fromAddress: "from@yandex.ru"
     subject: "registration confirmation"
-    body.template: "Go to link for complete your registration __uuid__"
+    body.template: "Go to link for complete your registration __link__"
   smtp:
     address: "smtp.yandex.ru:465"
     username: "username"
     password: "password"
+
+url: "http://example.com"

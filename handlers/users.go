@@ -8,6 +8,8 @@ import (
 	"github.com/go-echo-api-test-sample/services"
 	"github.com/satori/go.uuid"
 	"strings"
+	"github.com/go-redis/redis"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type resultLists struct {
@@ -53,15 +55,46 @@ func (h *handler) GetProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, H{"message": "You see your profile"})
 }
 
-func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string, smtpHostPort string, smtpUserName string, smtpPassword string) func (context echo.Context) error {
+func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string,
+	smtpHostPort string, smtpUserName string, smtpPassword string,
+	url string, redis *redis.Client) func (context echo.Context) error {
+
 	return func (context echo.Context) error {
 		d := &RegisterDTO{}
 		if err := context.Bind(d); err != nil {
 			return err
 		}
 
-		body := strings.Replace(bodyTemplate, "__uuid__", uuid.NewV4().String(), 1)
+		uuidStr := uuid.NewV4().String()
+		link := generateConfirmLink(url, uuidStr)
+
+		passwordHash, passwordHashErr := bcrypt.GenerateFromPassword([]byte(d.Password), bcrypt.DefaultCost)
+		if passwordHashErr != nil {
+			return passwordHashErr
+		}
+
+		if e := saveTokenToRedis(redis, uuidStr, d.Username, passwordHash); e != nil {
+			return e
+		}
+
+		body := strings.Replace(bodyTemplate, "__link__", link, 1)
 		m.SendMail(fromAdress, d.Username, subject, body, smtpHostPort, smtpUserName, smtpPassword)
-		return context.JSON(http.StatusOK, H{"message": "You successful registered"})
+		return context.JSON(http.StatusOK, H{"message": "You successful registered, check your email"})
 	}
+}
+
+func generateConfirmLink(url string, uuid string) string {
+	return url + "/confirm/registration?token="+uuid
+}
+
+func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, passwordHash []byte) error {
+	userData := map[string]interface{} {
+		"username": usernameEmail,
+		"password": passwordHash,
+	}
+	c := redis.HMSet(token, userData)
+	if c.Err() != nil {
+		return c.Err()
+	}
+	return nil
 }
