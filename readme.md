@@ -1,3 +1,8 @@
+Install dep
+```
+https://golang.github.io/dep/docs/installation.html
+```
+
 ```bash
 env GOCACHE=off go test ./...
 ```
@@ -21,4 +26,8 @@ go get github.com/vektra/mockery/.../
 
 ```bash
 (cd services/; mockery -name=Mailer)
+```
+
+```bash
+dep ensure -add github.com/gobuffalo/packr@1.12.0
 ```

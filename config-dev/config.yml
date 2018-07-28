@@ -10,7 +10,16 @@ postgresql:
   connectString: "host=172.24.0.2 user=postgres password=postgresqlPassword dbname=postgres connect_timeout=2 statement_timeout=2000 sslmode=disable"
   maxOpenConnections: 8
   maxIdleConnections: 2
-  # TODO drop before migration
+  dropObjects: true
+  dropObjectsSql: |
+    DROP SCHEMA public CASCADE;
+    CREATE SCHEMA public;
+
+    GRANT ALL ON SCHEMA public TO postgres;
+    GRANT ALL ON SCHEMA public TO public;
+
+    COMMENT ON SCHEMA public IS 'standard public schema';
+
 
 mail:
   registration:

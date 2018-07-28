@@ -5,7 +5,6 @@ import (
 	"github.com/go-echo-api-test-sample/handlers"
 	"github.com/go-echo-api-test-sample/models/user"
 	"github.com/go-echo-api-test-sample/db"
-	"github.com/go-echo-api-test-sample/migrations"
 	"os"
 	"github.com/labstack/gommon/log"
 	"os/signal"
@@ -37,8 +36,10 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	redisFlushOnStart := viper.GetBool("redis.flushOnStart")
 
 	postgresqlConnectString := viper.GetString("postgresql.connectString")
-	maxPostgreConns := viper.GetInt("maxOpenConnections")
-	minPostgreConns := viper.GetInt("minOpenConnections")
+	maxPostgreConns := viper.GetInt("postgresql.maxOpenConnections")
+	minPostgreConns := viper.GetInt("postgresql.minOpenConnections")
+	dropObjects := viper.GetBool("postgresql.dropObjects")
+	dropObjectsSql := viper.GetString("postgresql.dropObjectsSql")
 
 	fromAddress := viper.GetString("mail.registration.fromAddress")
 	subject := viper.GetString("mail.registration.subject")
@@ -50,7 +51,7 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	url := viper.GetString("url")
 
 	d0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
-	migrations.MigrateX(d0)
+	db.MigrateX(d0, dropObjects, dropObjectsSql)
 	d1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	m := user.NewUserModel(d1)
 	h := users.NewHandler(m)
