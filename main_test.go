@@ -59,7 +59,7 @@ func TestLoginSuccess(t *testing.T) {
 	e := configureEcho(m);
 	defer e.Close()
 
-	c, _, hm := request("POST", "/auth2/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
+	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
 	assert.Equal(t, http.StatusOK, c)
 	assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
 	assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
@@ -76,7 +76,7 @@ func TestLoginFail(t *testing.T) {
 	e := configureEcho(m);
 	defer e.Close()
 
-	c, _, hm := request("POST", "/auth2/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
+	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
 	assert.Equal(t, http.StatusInternalServerError, c)// todo
 	assert.Empty(t, hm.Get("Set-Cookie"))
 }
@@ -87,7 +87,7 @@ func TestRegister(t *testing.T) {
 	e := configureEcho(m);
 	defer e.Close()
 
-	c, _, hm := request("POST", "/auth2/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
+	c, _, hm := request("POST", "/auth/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
 	assert.Equal(t, http.StatusOK, c)
 	assert.Empty(t, hm.Get("Set-Cookie"))
 

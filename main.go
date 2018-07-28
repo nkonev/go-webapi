@@ -68,16 +68,16 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 
 	e := echo.New()
 
-	e.Use(getAuthMiddleware(sm, stringsToRegexpArray("/user.*", "/auth2/.*", "/static.*")))
+	e.Use(getAuthMiddleware(sm, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*")))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
 
-	e.POST("/auth2/login", getLogin(sm, m))
+	e.POST("/auth/login", getLogin(sm, m))
 	e.GET("/users/:id", h.GetDetail)
 	e.GET("/users", h.GetIndex)
 	e.GET("/profile", h.GetProfile)
-	e.POST("/auth2/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, r))
+	e.POST("/auth/register", h.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, r))
 
 	e.Pre(getStaticMiddleware(static))
 

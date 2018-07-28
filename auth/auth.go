@@ -18,7 +18,7 @@ const SESSION_COOKIE  = "SESSION";
 func checkUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
 		if regexp0.MatchString(uri) {
-			log.Infof("Skipping authentication for %v", regexp0)
+			log.Infof("Skipping authentication for %v because it matches %v", uri, regexp0.String())
 			return true
 		}
 	}
