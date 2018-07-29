@@ -11,6 +11,7 @@ import (
 	"github.com/go-echo-api-test-sample/auth"
 	"github.com/go-echo-api-test-sample/services/mocks"
 	"github.com/stretchr/testify/mock"
+	"mvdan.cc/xurls"
 )
 
 
@@ -83,13 +84,31 @@ func TestLoginFail(t *testing.T) {
 
 func TestRegister(t *testing.T) {
 	m := &mocks.Mailer{}
-	m.On("SendMail", "from@yandex.ru", "root@yandex.ru", "registration confirmation", mock.AnythingOfType("string"), "smtp.yandex.ru:465", "username", "password")
+	m.On("SendMail", "from@yandex.ru", "newroot@yandex.ru", "registration confirmation", mock.AnythingOfType("string"), "smtp.yandex.ru:465", "username", "password")
 	e := configureEcho(m);
 	defer e.Close()
 
-	c, _, hm := request("POST", "/auth/register", strings.NewReader(`{"username": "root@yandex.ru", "password": "password"}`), e, "")
+	c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
+	assert.Equal(t, http.StatusOK, c1)
+	assert.Empty(t, hm1.Get("Set-Cookie"))
+
+	var emailBody string;
+	emailBody = m.Calls[0].Arguments[3].(string)
+	assert.Contains(t, emailBody, "http://example.com/confirm/registration?token=")
+
+	confirmUrl := xurls.Strict.FindString(emailBody)
+	assert.Contains(t, confirmUrl, "http://example.com/confirm/registration?token=")
+
+	// confirm
+	c2, _, _ := request("GET", confirmUrl, nil, e, "")
+	assert.Equal(t, http.StatusOK, c2)
+
+	// login
+	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
 	assert.Equal(t, http.StatusOK, c)
-	assert.Empty(t, hm.Get("Set-Cookie"))
+	assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
+	assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
+
 
 	m.AssertExpectations(t)
 }

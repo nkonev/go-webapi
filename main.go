@@ -68,7 +68,7 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 
 	e := echo.New()
 
-	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*")))
+	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*", "/confirm.*")))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
@@ -78,6 +78,7 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
 	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis))
+	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, redis))
 
 	e.Pre(getStaticMiddleware(static))
 

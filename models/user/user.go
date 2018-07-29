@@ -11,6 +11,7 @@ type (
 		FindByID(id string) (*User, error)
 		FindAll() ([]User, error)
 		FindByLogin(login string) (*User, error)
+		CreateUser(login string, passwordHash string) (error)
 	}
 
 	UserModelImpl struct {
@@ -69,6 +70,10 @@ func (u *UserModelImpl) FindByLogin(login string) (*User, error) {
 	return &users[0], nil
 }
 
+func (u *UserModelImpl) CreateUser(login, passwordHash string) error {
+	_, error := u.db.Exec("INSERT INTO users (name, surname, lastname, password) VALUES ($1, '', '', $2)", login, passwordHash)
+	return error
+}
 
 func (u *User) GetPID() (pid string){
 	return strconv.Itoa(u.ID)

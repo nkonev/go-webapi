@@ -6,5 +6,5 @@ CREATE TABLE users (
 	  password text NOT NULL
 );
 INSERT INTO users VALUES
-(0, 'root', 's', 'l', 'password'),
-(1, 'vojtechvitek', '', '', 'password');
+(DEFAULT, 'root', 's', 'l', 'password'),
+(DEFAULT, 'vojtechvitek', '', '', 'password');

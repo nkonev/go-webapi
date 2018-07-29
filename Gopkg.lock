@@ -321,6 +321,14 @@
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
   version = "v2.2.1"
 
+[[projects]]
+  digest = "1:437572b4a57b97dba20ea4883f4a0b9d2e238078f6bab27c75c7da25843daf77"
+  name = "mvdan.cc/xurls"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d315b61cf6727664f310fa87b3197e9faf2a8513"
+  version = "v1.1.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -341,6 +349,7 @@
     "github.com/stretchr/testify/mock",
     "golang.org/x/crypto/bcrypt",
     "gopkg.in/DATA-DOG/go-sqlmock.v1",
+    "mvdan.cc/xurls",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

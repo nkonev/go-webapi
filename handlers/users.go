@@ -10,6 +10,8 @@ import (
 	"strings"
 	"github.com/go-redis/redis"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/jmoiron/sqlx"
+	"errors"
 )
 
 type resultLists struct {
@@ -57,7 +59,7 @@ func (h *handler) GetProfile(c echo.Context) error {
 
 func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string,
 	smtpHostPort string, smtpUserName string, smtpPassword string,
-	url string, redis *redis.Client) func (context echo.Context) error {
+	url string, redis *redis.Client) echo.HandlerFunc {
 
 	return func (context echo.Context) error {
 		d := &RegisterDTO{}
@@ -92,9 +94,41 @@ func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, p
 		"username": usernameEmail,
 		"password": passwordHash,
 	}
-	c := redis.HMSet(token, userData)
+	c := redis.HMSet("registration:"+token, userData)
 	if c.Err() != nil {
 		return c.Err()
 	}
 	return nil
+}
+// todo introduce model for this token
+func getValueByTokenFromRedis(redis *redis.Client, token string) (string, string, error) {
+	redisResponse := redis.HGetAll("registration:"+token)
+	if map0, err := redisResponse.Result(); err != nil {
+		return "", "", redisResponse.Err()
+	} else {
+		username := map0["username"]
+		password := map0["password"]
+
+		return username, password, nil
+	}
+}
+
+func (h *handler) ConfirmRegistration(db *sqlx.DB, client *redis.Client) echo.HandlerFunc {
+	return func (context echo.Context) error {
+		token := context.Request().URL.Query().Get("token")
+
+		if len(token) == 0 {
+			return errors.New("Zero length token param")
+		}
+		if username, passwordHash, err := getValueByTokenFromRedis(client, token); err != nil {
+			return err
+		} else {
+			e := h.UserModel.CreateUser(username, passwordHash)
+			if e != nil {
+				return e
+			}
+		}
+
+		return context.JSON(http.StatusOK, H{"message": "You successful confirm your registration"})
+	}
 }
