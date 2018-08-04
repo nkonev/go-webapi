@@ -34,6 +34,9 @@ func (u *UsersModelStub) FindAll() ([]user.User, error) {
 	})
 	return users, nil
 }
+func (u *UsersModelStub)CreateUser(login string, passwordHash string) (error){
+	return nil
+}
 
 func TestGetDetail(t *testing.T) {
 	e := echo.New()
