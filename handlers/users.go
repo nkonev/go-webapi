@@ -12,7 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/jmoiron/sqlx"
 	"errors"
-)
+	"time"
+	)
 
 type resultLists struct {
 	Users []user.User `json:"users"`
@@ -59,7 +60,7 @@ func (h *handler) GetProfile(c echo.Context) error {
 
 func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string,
 	smtpHostPort string, smtpUserName string, smtpPassword string,
-	url string, redis *redis.Client) echo.HandlerFunc {
+	url string, redis *redis.Client, confirmationTokenTtl time.Duration) echo.HandlerFunc {
 
 	return func (context echo.Context) error {
 		d := &RegisterDTO{}
@@ -75,7 +76,7 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 			return passwordHashErr
 		}
 
-		if e := saveTokenToRedis(redis, uuidStr, d.Username, passwordHash); e != nil {
+		if e := saveTokenToRedis(redis, uuidStr, d.Username, passwordHash, confirmationTokenTtl); e != nil {
 			return e
 		}
 
@@ -89,8 +90,8 @@ func generateConfirmLink(url string, uuid string) string {
 	return url + "/confirm/registration?token="+uuid
 }
 
-func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, passwordHash []byte) error {
-	userData := map[string]interface{} {
+func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, passwordHash []byte, confirmationTokenTtl time.Duration) error {
+	userData := map[string]interface{}{
 		"username": usernameEmail,
 		"password": passwordHash,
 	}
@@ -98,6 +99,7 @@ func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, p
 	if c.Err() != nil {
 		return c.Err()
 	}
+	redis.Expire("registration:"+token, confirmationTokenTtl)
 	return nil
 }
 // todo introduce model for this token

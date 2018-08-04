@@ -51,6 +51,9 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	smtpUserName := viper.GetString("mail.smtp.username")
 	smtpPassword := viper.GetString("mail.smtp.password")
 
+	confirmationTokenTtl := viper.GetDuration("confirmation.token.ttl")
+	sessionTtl := viper.GetDuration("session.ttl")
+
 	url := viper.GetString("url")
 
 	db0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
@@ -73,11 +76,11 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit("2M"))
 
-	e.POST("/auth/login", getLogin(sessionModel, userModel))
+	e.POST("/auth/login", getLogin(sessionModel, userModel, sessionTtl))
 	e.GET("/users/:id", usersHandler.GetDetail)
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
-	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis))
+	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis, confirmationTokenTtl))
 	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, redis))
 
 	e.Pre(getStaticMiddleware(static))
@@ -113,9 +116,9 @@ func stringsToRegexpArray(strings... string) []regexp.Regexp {
 	return regexps
 }
 
-func getLogin(sessionModel session.SessionModel, userModel *user.UserModelImpl) echo.HandlerFunc {
+func getLogin(sessionModel session.SessionModel, userModel *user.UserModelImpl, sessionTtl time.Duration) echo.HandlerFunc {
 	return func (context echo.Context) error {
-		return auth.LoginManager(context, sessionModel, userModel)
+		return auth.LoginManager(context, sessionModel, userModel, sessionTtl)
 	}
 }
 

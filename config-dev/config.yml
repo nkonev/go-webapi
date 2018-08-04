@@ -32,3 +32,6 @@ mail:
     password: "password"
 
 url: "http://example.com"
+
+confirmation.token.ttl: "20m"
+session.ttl: "30m"
