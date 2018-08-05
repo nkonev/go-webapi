@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/labstack/echo"
-	"github.com/go-echo-api-test-sample/handlers"
+	"github.com/go-echo-api-test-sample/handlers/users"
 	"github.com/go-echo-api-test-sample/models/user"
 	"github.com/go-echo-api-test-sample/db"
 	"os"
@@ -20,6 +20,7 @@ import (
 	"github.com/gobuffalo/packr"
 	"net/http"
 	"strings"
+	"github.com/go-echo-api-test-sample/handlers/facebook"
 )
 
 func configureEcho(mailer services.Mailer) *echo.Echo {
@@ -55,12 +56,16 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	sessionTtl := viper.GetDuration("session.ttl")
 
 	url := viper.GetString("url")
+	facebookClientId := viper.GetString("facebook.clientId")
+	facebookSecret := viper.GetString("facebook.clientSecret")
 
 	db0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	db.MigrateX(db0, dropObjects, dropObjectsSql)
 	db1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	userModel := user.NewUserModel(db1)
 	usersHandler := users.NewHandler(userModel)
+	fbCallback := "/auth/fb/callback"
+	facebookHandler := facebook.NewHandler(facebookClientId, facebookSecret, url+fbCallback, userModel)
 
 	redis := db.ConnectRedis(redisAddr, redisPassword, redisDbNum, redisFlushOnStart)
 	sessionModel := session.SessionModel{Redis: *redis}
@@ -82,6 +87,11 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	e.GET("/profile", usersHandler.GetProfile)
 	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis, confirmationTokenTtl))
 	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, redis))
+
+
+	// facebook
+	e.Any("/auth/fb", facebookHandler.RedirectForLogin())
+	e.Any("/auth/fb/callback", facebookHandler.CallBackHandler())
 
 	e.Pre(getStaticMiddleware(static))
 

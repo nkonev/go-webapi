@@ -63,6 +63,14 @@
   version = "v1.12.0"
 
 [[projects]]
+  digest = "1:f958a1c137db276e52f0b50efee41a1a389dcdded59a69711f3e872757dab34b"
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  pruneopts = ""
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   digest = "1:9b7c5846d70f425d7fe279595e32a20994c6075e87be03b5c367ed07280877c5"
   name = "github.com/hashicorp/hcl"
@@ -80,6 +88,14 @@
   ]
   pruneopts = ""
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+
+[[projects]]
+  digest = "1:d012f7233bd3a48c946a46a6867fdb446cf5c106175a7526f792633552e7447a"
+  name = "github.com/huandu/facebook"
+  packages = ["."]
+  pruneopts = ""
+  revision = "543622ec99660cca9192def80a306c211b5ca3f0"
+  version = "v2.3.0"
 
 [[projects]]
   branch = "master"
@@ -284,6 +300,29 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b970d5e8b11b4c8927a06298566eb8daf66a009702688b4142cc2a961e374e91"
+  name = "golang.org/x/net"
+  packages = [
+    "context",
+    "context/ctxhttp",
+  ]
+  pruneopts = ""
+  revision = "f4c29de78a2a91c00474a2e689954305c350adf9"
+
+[[projects]]
+  branch = "master"
+  digest = "1:a8172cf4304ef01f0c7dd634c331880247d10f9e28b041821f2321a8e4bb3b7c"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "facebook",
+    "internal",
+  ]
+  pruneopts = ""
+  revision = "3d292e4d0cdc3a0113e6d207bb137145ef1de42f"
+
+[[projects]]
+  branch = "master"
   digest = "1:274e6fab68b7f298bf3f70bd60d4ba0c55284d1d2034175fb3324924268ccd9e"
   name = "golang.org/x/sys"
   packages = ["unix"]
@@ -304,6 +343,22 @@
   pruneopts = ""
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
+
+[[projects]]
+  digest = "1:c1771ca6060335f9768dff6558108bc5ef6c58506821ad43377ee23ff059e472"
+  name = "google.golang.org/appengine"
+  packages = [
+    "internal",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch",
+  ]
+  pruneopts = ""
+  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:4014584c076f25aaf35d9de36c79ae2d208bba32c780f405e3395dad79292e22"
@@ -337,6 +392,7 @@
     "github.com/Boostport/migration/driver/postgres",
     "github.com/go-redis/redis",
     "github.com/gobuffalo/packr",
+    "github.com/huandu/facebook",
     "github.com/jmoiron/sqlx",
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
@@ -348,6 +404,8 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "golang.org/x/crypto/bcrypt",
+    "golang.org/x/oauth2",
+    "golang.org/x/oauth2/facebook",
     "gopkg.in/DATA-DOG/go-sqlmock.v1",
     "mvdan.cc/xurls",
   ]

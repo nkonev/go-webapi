@@ -31,7 +31,12 @@ mail:
     username: "username"
     password: "password"
 
-url: "http://example.com"
+url: "http://localhost:1234" # without trailing slash
+# localhost need for facebook
 
 confirmation.token.ttl: "20m"
 session.ttl: "30m"
+
+facebook:
+  clientId: "1684113965162824"
+  clientSecret: "provide it"

@@ -143,3 +143,16 @@ func TestStaticAssets(t *testing.T) {
 	assert.Equal(t, http.StatusOK, c)
 	assert.Equal(t, `console.log("Hello world");`, b)
 }
+
+
+func TestFacebookCallback(t *testing.T) {
+	m := &mocks.Mailer{}
+	e := configureEcho(m);
+	defer e.Close()
+
+	c1, _, _ := request("GET", "/auth/fb/callback", nil, e, "")
+	assert.Equal(t, http.StatusOK, c1)
+	//assert.Empty(t, hm1.Get("Set-Cookie")) // todo
+
+	m.AssertExpectations(t)
+}
