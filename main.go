@@ -23,7 +23,7 @@ import (
 	"github.com/go-echo-api-test-sample/handlers/facebook"
 )
 
-func configureEcho(mailer services.Mailer) *echo.Echo {
+func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient) *echo.Echo {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./config")   // path to look for the config file in
 	viper.AddConfigPath("./config-dev")  // call multiple times to add many search paths
@@ -59,13 +59,14 @@ func configureEcho(mailer services.Mailer) *echo.Echo {
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
 
+
 	db0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	db.MigrateX(db0, dropObjects, dropObjectsSql)
 	db1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	userModel := user.NewUserModel(db1)
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
-	facebookHandler := facebook.NewHandler(facebookClientId, facebookSecret, url+fbCallback, userModel)
+	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
 
 	redis := db.ConnectRedis(redisAddr, redisPassword, redisDbNum, redisFlushOnStart)
 	sessionModel := session.SessionModel{Redis: *redis}
@@ -142,12 +143,14 @@ func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.
 }
 
 func main() {
-	e := configureEcho(&services.MailerImpl{})
+	e := configureEcho(&services.MailerImpl{}, &facebook.FacebookClientImpl{})
+
+	address := viper.GetString("address") // todo rely on side effect of configureEcho()
 
 	log.Info("Starting server")
 	// Start server
 	go func() {
-		if err := e.Start(":1234"); err != nil {
+		if err := e.Start(address); err != nil {
 			log.Infof("shutting down the server due error %v", err)
 		}
 	}()

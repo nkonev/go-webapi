@@ -9,14 +9,34 @@ import (
 	"errors"
 	fb "github.com/huandu/facebook"
 	"github.com/go-echo-api-test-sample/models/user"
+	"golang.org/x/net/context"
 )
 
 type handler struct {
+	facebookClient FacebookClient
 	config *oauth2.Config
 	userModel *user.UserModelImpl
 }
 
-func NewHandler(facebookClientId, facebookSecret, urlFbCallback string, userModel *user.UserModelImpl) *handler {
+type FacebookClient interface {
+	Exchange(config *oauth2.Config, ctx context.Context, code string) (*oauth2.Token, error)
+	GetInfo(accessToken string) (fb.Result, error)
+}
+
+type FacebookClientImpl struct{}
+
+func (f *FacebookClientImpl) Exchange(config *oauth2.Config, ctx context.Context, code string) (*oauth2.Token, error) {
+	return config.Exchange(ctx, code)
+}
+
+func (f *FacebookClientImpl) GetInfo(accessToken string) (fb.Result, error) {
+	return fb.Get("/me", fb.Params{
+		"fields": "name,email,id",
+		"access_token": accessToken,
+	})
+}
+
+func NewHandler(facebookClient FacebookClient, facebookClientId, facebookSecret, urlFbCallback string, userModel *user.UserModelImpl) *handler {
 	if len(facebookClientId) == 0 {
 		log.Panicf("facebookClientId is empty")
 	}
@@ -28,6 +48,7 @@ func NewHandler(facebookClientId, facebookSecret, urlFbCallback string, userMode
 	}
 
 	return &handler{
+		facebookClient: facebookClient,
 		userModel: userModel,
 		config: &oauth2.Config{
 			ClientID:     facebookClientId,
@@ -55,16 +76,13 @@ func (h *handler) CallBackHandler() echo.HandlerFunc {
 		}
 		log.Infof("You are successfully get code %v", code)
 		// Handle it on your way
-		token, err := h.config.Exchange(c.Request().Context(), code)
+		token, err := h.facebookClient.Exchange(h.config, c.Request().Context(), code)
 		if err != nil {
 			return err
 		}
 		log.Infof("Successfully get access token %v which will expired at %v", token.AccessToken, token.Expiry)
 
-		res, err := fb.Get("/me", fb.Params{
-			"fields": "name,email,id",
-			"access_token": token.AccessToken,
-		})
+		res, err := h.facebookClient.GetInfo(token.AccessToken)
 		if err != nil {
 			return err
 		}
