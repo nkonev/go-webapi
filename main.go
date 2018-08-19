@@ -1,36 +1,37 @@
 package main
 
 import (
-	"github.com/labstack/echo"
-	"github.com/go-echo-api-test-sample/handlers/users"
-	"github.com/go-echo-api-test-sample/models/user"
-	"github.com/go-echo-api-test-sample/db"
-	"os"
-	"github.com/labstack/gommon/log"
-	"os/signal"
 	"context"
-	"time"
-	"github.com/labstack/echo/middleware"
-	"github.com/go-echo-api-test-sample/auth"
-	"github.com/go-echo-api-test-sample/models/session"
-	"github.com/spf13/viper"
 	"fmt"
-	"github.com/go-echo-api-test-sample/services"
-	"regexp"
-	"github.com/gobuffalo/packr"
 	"net/http"
+	"os"
+	"os/signal"
+	"regexp"
 	"strings"
+	"time"
+
+	"github.com/go-echo-api-test-sample/auth"
+	"github.com/go-echo-api-test-sample/db"
 	"github.com/go-echo-api-test-sample/handlers/facebook"
+	"github.com/go-echo-api-test-sample/handlers/users"
+	"github.com/go-echo-api-test-sample/models/session"
+	"github.com/go-echo-api-test-sample/models/user"
+	"github.com/go-echo-api-test-sample/services"
+	"github.com/gobuffalo/packr"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
+	"github.com/spf13/viper"
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient) *echo.Echo {
 	viper.SetConfigName("config")
-	viper.AddConfigPath("./config")   // path to look for the config file in
-	viper.AddConfigPath("./config-dev")  // call multiple times to add many search paths
+	viper.AddConfigPath("./config")     // path to look for the config file in
+	viper.AddConfigPath("./config-dev") // call multiple times to add many search paths
 	viper.SetEnvPrefix("GO_EXAMPLE")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil { // Handle errors reading the config file
+	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
@@ -58,7 +59,6 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	url := viper.GetString("url")
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
-
 
 	db0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
 	db.MigrateX(db0, dropObjects, dropObjectsSql)
@@ -89,10 +89,9 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis, confirmationTokenTtl))
 	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, redis))
 
-
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())
-	e.Any("/auth/fb/callback", facebookHandler.CallBackHandler())
+	e.Any(fbCallback, facebookHandler.CallBackHandler())
 
 	e.Pre(getStaticMiddleware(static))
 
@@ -114,30 +113,29 @@ func getStaticMiddleware(box packr.Box) echo.MiddlewareFunc {
 	}
 }
 
-func stringsToRegexpArray(strings... string) []regexp.Regexp {
+func stringsToRegexpArray(strings ...string) []regexp.Regexp {
 	regexps := make([]regexp.Regexp, len(strings))
 	for i, str := range strings {
 		r, err := regexp.Compile(str)
 		if err != nil {
 			panic(err)
 		} else {
-			regexps[i] = *r;
+			regexps[i] = *r
 		}
 	}
 	return regexps
 }
 
 func getLogin(sessionModel session.SessionModel, userModel *user.UserModelImpl, sessionTtl time.Duration) echo.HandlerFunc {
-	return func (context echo.Context) error {
+	return func(context echo.Context) error {
 		return auth.LoginManager(context, sessionModel, userModel, sessionTtl)
 	}
 }
 
-
 func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			return auth.CheckSession(c, next, sm, whitelist);
+			return auth.CheckSession(c, next, sm, whitelist)
 		}
 	}
 }

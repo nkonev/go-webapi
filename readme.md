@@ -26,6 +26,7 @@ go get github.com/vektra/mockery/.../
 
 ```bash
 (cd services/; mockery -name=Mailer)
+(cd handlers/facebook; mockery -name=FacebookClient)
 ```
 
 ```bash
