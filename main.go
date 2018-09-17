@@ -22,6 +22,7 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/spf13/viper"
+	"go.uber.org/dig"
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient) *echo.Echo {
@@ -141,8 +142,26 @@ func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.
 }
 
 func main() {
-	e := configureEcho(&services.MailerImpl{}, &facebook.FacebookClientImpl{})
+	container := dig.New()
+	container.Provide(func() services.Mailer {
+		return &services.MailerImpl{}
+	})
+	container.Provide(func() facebook.FacebookClient {
+		return &facebook.FacebookClientImpl{}
+	})
+	container.Provide(func(m services.Mailer, f facebook.FacebookClient) *echo.Echo {
+		return configureEcho(m, f);
+	})
 
+	err := container.Invoke(func(e *echo.Echo) {
+		runEcho(e);
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func runEcho(e *echo.Echo) {
 	address := viper.GetString("address") // todo rely on side effect of configureEcho()
 
 	log.Info("Starting server")
@@ -165,4 +184,5 @@ func main() {
 	if err := e.Shutdown(ctx); err != nil {
 		log.Fatal(err)
 	}
+
 }

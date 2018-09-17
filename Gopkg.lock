@@ -286,6 +286,18 @@
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
 
 [[projects]]
+  digest = "1:64bc399599fd7107a0aac35860b7c8e448431f7c803999e928f7d5f1bf39a23e"
+  name = "go.uber.org/dig"
+  packages = [
+    ".",
+    "internal/digreflect",
+    "internal/dot",
+  ]
+  pruneopts = ""
+  revision = "d6ba99365e475c24e8ac02392eb3f78ccab2a6f3"
+  version = "v1.4.0"
+
+[[projects]]
   branch = "master"
   digest = "1:6ef14be530be39b6b9d75d54ce1d546ae9231e652d9e3eef198cbb19ce8ed3e7"
   name = "golang.org/x/crypto"
@@ -403,7 +415,9 @@
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
+    "go.uber.org/dig",
     "golang.org/x/crypto/bcrypt",
+    "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/facebook",
     "gopkg.in/DATA-DOG/go-sqlmock.v1",

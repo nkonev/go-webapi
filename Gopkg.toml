@@ -38,3 +38,7 @@
 [[constraint]]
   name = "github.com/huandu/facebook"
   version = "2.3.0"
+
+[[constraint]]
+  name = "go.uber.org/dig"
+  version = "1.4.0"
