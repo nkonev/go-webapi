@@ -10,9 +10,13 @@ import (
 	"strings"
 	"github.com/go-echo-api-test-sample/auth"
 	serviceMocks "github.com/go-echo-api-test-sample/services/mocks"
-	"github.com/stretchr/testify/mock"
-	"mvdan.cc/xurls"
 	facebookMocks "github.com/go-echo-api-test-sample/handlers/facebook/mocks"
+	"go.uber.org/dig"
+	"github.com/go-echo-api-test-sample/services"
+	"github.com/go-echo-api-test-sample/handlers/facebook"
+	"github.com/go-echo-api-test-sample/db"
+	"mvdan.cc/xurls"
+	"github.com/stretchr/testify/mock"
 	"golang.org/x/oauth2"
 	fb "github.com/huandu/facebook"
 )
@@ -38,147 +42,206 @@ func getSession(headers http.Header) string {
 	return strings.Replace(headers.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=", "", 1)
 }
 
-func TestUsers(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
+func mockMailer() services.Mailer{
+	return &serviceMocks.Mailer{}
+}
 
-	c, b, _ := request("GET", "/users", nil, e, "")
-	assert.Equal(t, http.StatusOK, c)
-	assert.NotEmpty(t, b)
+func mockFacebookClient() facebook.FacebookClient {
+	return &facebookMocks.FacebookClient{}
+}
+
+func runTest(container *dig.Container, test func (e *echo.Echo)){
+	if err := container.Invoke(func (e *echo.Echo){
+		defer e.Close()
+
+		test(e)
+	}); err != nil {
+		panic(err)
+	}
+}
+
+func TestUsers(t *testing.T) {
+
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
+
+	runTest(container, func (e *echo.Echo){
+		c, b, _ := request("GET", "/users", nil, e, "")
+		assert.Equal(t, http.StatusOK, c)
+		assert.NotEmpty(t, b)
+	})
 }
 
 func TestUser(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	c, b, _ := request("GET", "/users/1", nil, e, "")
-	assert.Equal(t, http.StatusOK, c)
-	assert.NotEmpty(t, b)
+	runTest(container, func (e *echo.Echo){
+		c, b, _ := request("GET", "/users/1", nil, e, "")
+		assert.Equal(t, http.StatusOK, c)
+		assert.NotEmpty(t, b)
+	})
 }
 
 func TestLoginSuccess(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
-	assert.Equal(t, http.StatusOK, c)
-	assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
-	assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
+	runTest(container, func (e *echo.Echo){
+		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
+		assert.Equal(t, http.StatusOK, c)
+		assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
+		assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
 
-	session := getSession(hm)
+		session := getSession(hm)
 
-	codeProfile, bodyProfile, _ := request("GET", "/profile", nil, e, session)
-	assert.Equal(t, http.StatusOK, codeProfile)
-	assert.Contains(t, bodyProfile, "You see your profile")
+		codeProfile, bodyProfile, _ := request("GET", "/profile", nil, e, session)
+		assert.Equal(t, http.StatusOK, codeProfile)
+		assert.Contains(t, bodyProfile, "You see your profile")
+	})
 }
 
 func TestLoginFail(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
-	assert.Equal(t, http.StatusInternalServerError, c)// todo
-	assert.Empty(t, hm.Get("Set-Cookie"))
+	runTest(container, func (e *echo.Echo){
+		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
+		assert.Equal(t, http.StatusInternalServerError, c)// todo
+		assert.Empty(t, hm.Get("Set-Cookie"))
+	})
 }
 
 func TestRegister(t *testing.T) {
+	container := dig.New()
+
 	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
 	m.On("SendMail", "from@yandex.ru", "newroot@yandex.ru", "registration confirmation", mock.AnythingOfType("string"), "smtp.yandex.ru:465", "username", "password")
-	e := configureEcho(m, f);
-	defer e.Close()
 
-	c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
-	assert.Equal(t, http.StatusOK, c1)
-	assert.Empty(t, hm1.Get("Set-Cookie"))
+	container.Provide(func() services.Mailer {
+		return m
+	})
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	var emailBody string;
-	emailBody = m.Calls[0].Arguments[3].(string)
-	assert.Contains(t, emailBody, "http://localhost:1234/confirm/registration?token=")
+	runTest(container, func (e *echo.Echo){
+		c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
+		assert.Equal(t, http.StatusOK, c1)
+		assert.Empty(t, hm1.Get("Set-Cookie"))
 
-	confirmUrl := xurls.Strict.FindString(emailBody)
-	assert.Contains(t, confirmUrl, "http://localhost:1234/confirm/registration?token=")
+		var emailBody string;
+		emailBody = m.Calls[0].Arguments[3].(string)
+		assert.Contains(t, emailBody, "http://localhost:1234/confirm/registration?token=")
 
-	// confirm
-	c2, _, _ := request("GET", confirmUrl, nil, e, "")
-	assert.Equal(t, http.StatusOK, c2)
+		confirmUrl := xurls.Strict.FindString(emailBody)
+		assert.Contains(t, confirmUrl, "http://localhost:1234/confirm/registration?token=")
 
-	// login
-	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
-	assert.Equal(t, http.StatusOK, c)
-	assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
-	assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
+		// confirm
+		c2, _, _ := request("GET", confirmUrl, nil, e, "")
+		assert.Equal(t, http.StatusOK, c2)
+
+		// login
+		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
+		assert.Equal(t, http.StatusOK, c)
+		assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
+		assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
 
 
-	m.AssertExpectations(t)
+		m.AssertExpectations(t)
+	})
+
 }
 
 
 
 func TestStaticIndex(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	c, _, _ := request("GET", "/index.html", nil, e, "")
-	assert.Equal(t, http.StatusMovedPermanently, c)
+	runTest(container, func (e *echo.Echo){
+		c, _, _ := request("GET", "/index.html", nil, e, "")
+		assert.Equal(t, http.StatusMovedPermanently, c)
+	})
 }
 
 func TestStaticRoot(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	c, b, _ := request("GET", "/", nil, e, "")
-	assert.Equal(t, http.StatusOK, c)
-	assert.Contains(t, b, "Hello, world!")
+	runTest(container, func (e *echo.Echo){
+		c, b, _ := request("GET", "/", nil, e, "")
+		assert.Equal(t, http.StatusOK, c)
+		assert.Contains(t, b, "Hello, world!")
+	})
 }
 
-func TestStaticAssets(t *testing.T) {
-	m := &serviceMocks.Mailer{}
-	f := &facebookMocks.FacebookClient{}
-	e := configureEcho(m, f);
-	defer e.Close()
 
-	c, b, _ := request("GET", "/assets/main.js", nil, e, "")
-	assert.Equal(t, http.StatusOK, c)
-	assert.Equal(t, `console.log("Hello world");`, b)
+func TestStaticAssets(t *testing.T) {
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
+
+	runTest(container, func (e *echo.Echo){
+		c, b, _ := request("GET", "/assets/main.js", nil, e, "")
+		assert.Equal(t, http.StatusOK, c)
+		assert.Equal(t, `console.log("Hello world");`, b)
+	})
 }
 
 
 func TestFacebookCallback(t *testing.T) {
-	m := &serviceMocks.Mailer{}
 	f := &facebookMocks.FacebookClient{}
 	f.On("Exchange",
-		/*mock.AnythingOfType("&oauth2.Config"),*/ mock.Anything,
+		//mock.AnythingOfType("&oauth2.Config"),
+		mock.Anything,
 		mock.AnythingOfType("*context.emptyCtx"),
 		"test0123").Return(&oauth2.Token{
 		AccessToken: "accessToken456",
 	}, nil)
 	f.On("GetInfo", "accessToken456").Return(fb.Result{"email": "email@example.com"}, nil)
-	e := configureEcho(m, f);
-	defer e.Close()
 
-	req := test.NewRequest("GET", "/auth/fb/callback?code=test0123", nil)
-	header := map[string][]string{
-		echo.HeaderContentType: {"application/json"},
-	}
-	req.Header = header
-	rec := test.NewRecorder()
-	e.ServeHTTP(rec, req)
+	container := dig.New()
+	container.Provide(mockMailer)
+	container.Provide(func() facebook.FacebookClient {
+		return f
+	})
+	container.Provide(db.ConfigureRedis)
+	container.Provide(configureEcho)
 
-	passedCode := f.Calls[0].Arguments[2]
-	assert.Equal(t, "test0123", passedCode)
+	runTest(container, func (e *echo.Echo){
+		req := test.NewRequest("GET", "/auth/fb/callback?code=test0123", nil)
+		header := map[string][]string{
+			echo.HeaderContentType: {"application/json"},
+		}
+		req.Header = header
+		rec := test.NewRecorder()
+		e.ServeHTTP(rec, req)
 
-	f.AssertExpectations(t)
+		passedCode := f.Calls[0].Arguments[2]
+		assert.Equal(t, "test0123", passedCode)
+
+		f.AssertExpectations(t)
+	})
+
 }

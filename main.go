@@ -23,15 +23,11 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/spf13/viper"
 	"go.uber.org/dig"
+	"github.com/go-redis/redis"
 )
 
-func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient) *echo.Echo {
+func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client) *echo.Echo {
 	initViper()
-
-	redisAddr := viper.GetString("redis.addr")
-	redisPassword := viper.GetString("redis.password")
-	redisDbNum := viper.GetInt("redis.db")
-	redisFlushOnStart := viper.GetBool("redis.flushOnStart")
 
 	postgresqlConnectString := viper.GetString("postgresql.connectString")
 	maxPostgreConns := viper.GetInt("postgresql.maxOpenConnections")
@@ -61,7 +57,6 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	fbCallback := "/auth/fb/callback"
 	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
 
-	redis := db.ConnectRedis(redisAddr, redisPassword, redisDbNum, redisFlushOnStart)
 	sessionModel := session.SessionModel{Redis: *redis}
 
 	log.SetOutput(os.Stdout)
@@ -157,6 +152,7 @@ func main() {
 	container.Provide(func() facebook.FacebookClient {
 		return &facebook.FacebookClientImpl{}
 	})
+	container.Provide(db.ConfigureRedis)
 	container.Provide(configureEcho)
 
 	err := container.Invoke(runEcho)
@@ -170,7 +166,7 @@ func runEcho(e *echo.Echo) {
 	address := viper.GetString("address")
 
 	log.Info("Starting server")
-	// Start server
+	// Start server in another goroutine
 	go func() {
 		if err := e.Start(address); err != nil {
 			log.Infof("shutting down the server due error %v", err)
