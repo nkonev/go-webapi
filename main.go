@@ -26,6 +26,7 @@ import (
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient) *echo.Echo {
+	initViper()
 
 	redisAddr := viper.GetString("redis.addr")
 	redisPassword := viper.GetString("redis.password")
@@ -148,7 +149,6 @@ func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.
 }
 
 func main() {
-	initViper()
 
 	container := dig.New()
 	container.Provide(func() services.Mailer {
