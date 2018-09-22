@@ -9,11 +9,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/pkg/errors"
 	"github.com/go-echo-api-test-sample/models/user"
-	"github.com/satori/go.uuid"
 	"time"
 )
 
-const SESSION_COOKIE  = "SESSION";
+const SESSION_COOKIE = "SESSION";
 
 func checkUrlInWhitelist(whitelist []regexp.Regexp, uri string) bool {
 	for _, regexp0 := range whitelist {
@@ -36,15 +35,9 @@ func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel sess
 		return e
 	}
 
-	kv, e := sessionModel.Redis.HGetAll(c.Value).Result()
-	if e != nil {
-		log.Errorf("Error during get session")
-		return e
+	if err := sessionModel.CheckSession(c.Value); err!= nil {
+		return err
 	}
-	if len(kv) == 0 {
-		return errors.Errorf("Got empty session from redis")
-	}
-	log.Infof("Loaded session %v", kv)
 
 	return next(context)
 }
@@ -68,22 +61,14 @@ func LoginManager(context echo.Context, sessionModel session.SessionModel, userM
 		return errors.Errorf("User %v not found", m.Username)
 	}
 
-
-	ep := bcrypt.CompareHashAndPassword([]byte(userEntity.GetPassword()), []byte(m.Password))
-	if ep != nil {
+	passwordCompareError := bcrypt.CompareHashAndPassword([]byte(userEntity.GetPassword()), []byte(m.Password))
+	if passwordCompareError != nil {
 		return errors.Errorf("Bad password")
 	}
 
-	sessionId := uuid.NewV4().String()
-	log.Infof("Saving session %v with duration %v", sessionId, sessionTtl)
-
-	if cmd := sessionModel.Redis.HSet(sessionId, "login", m.Username); cmd.Err() != nil {
-		log.Errorf("Error during save session")
-		return cmd.Err()
-	}
-	if err := sessionModel.Redis.Expire(sessionId, sessionTtl).Err(); err != nil {
-		log.Errorf("Error during set session expiration")
-		return err
+	sessionId, sessionCreateError := sessionModel.CreateSession(m.Username, sessionTtl)
+	if sessionCreateError != nil {
+		return sessionCreateError
 	}
 
 	c := &http.Cookie{

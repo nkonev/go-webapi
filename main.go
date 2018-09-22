@@ -26,9 +26,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
-func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client) *echo.Echo {
-	initViper()
-
+func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client, sessionModel session.SessionModel) *echo.Echo {
 	postgresqlConnectString := viper.GetString("postgresql.connectString")
 	maxPostgreConns := viper.GetInt("postgresql.maxOpenConnections")
 	minPostgreConns := viper.GetInt("postgresql.minOpenConnections")
@@ -56,8 +54,6 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
 	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
-
-	sessionModel := session.SessionModel{Redis: *redis}
 
 	log.SetOutput(os.Stdout)
 
@@ -143,8 +139,12 @@ func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.
 	}
 }
 
-func main() {
+func sessionModel(redis *redis.Client) session.SessionModel {
+	return session.SessionModel{Redis: *redis}
+}
 
+func main() {
+	initViper()
 	container := dig.New()
 	container.Provide(func() services.Mailer {
 		return &services.MailerImpl{}
@@ -153,6 +153,7 @@ func main() {
 		return &facebook.FacebookClientImpl{}
 	})
 	container.Provide(db.ConfigureRedis)
+	container.Provide(sessionModel)
 	container.Provide(configureEcho)
 
 	err := container.Invoke(runEcho)
@@ -161,8 +162,8 @@ func main() {
 	}
 }
 
+// rely on viper import and it's configured by
 func runEcho(e *echo.Echo) {
-	// rely on viper import and it's configured by
 	address := viper.GetString("address")
 
 	log.Info("Starting server")
@@ -185,5 +186,4 @@ func runEcho(e *echo.Echo) {
 	if err := e.Shutdown(ctx); err != nil {
 		log.Fatal(err)
 	}
-
 }

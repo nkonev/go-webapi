@@ -90,10 +90,13 @@ func generateConfirmLink(url string, uuid string) string {
 	return url + "/confirm/registration?token="+uuid
 }
 
+const fieldUserName = "username"
+const fieldPassword = "password"
+
 func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, passwordHash []byte, confirmationTokenTtl time.Duration) error {
 	userData := map[string]interface{}{
-		"username": usernameEmail,
-		"password": passwordHash,
+		fieldUserName: usernameEmail,
+		fieldPassword: passwordHash,
 	}
 	c := redis.HMSet("registration:"+token, userData)
 	if c.Err() != nil {
@@ -108,8 +111,8 @@ func getValueByTokenFromRedis(redis *redis.Client, token string) (string, string
 	if map0, err := redisResponse.Result(); err != nil {
 		return "", "", redisResponse.Err()
 	} else {
-		username := map0["username"]
-		password := map0["password"]
+		username := map0[fieldUserName]
+		password := map0[fieldPassword]
 
 		return username, password, nil
 	}

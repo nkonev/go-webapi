@@ -60,13 +60,19 @@ func runTest(container *dig.Container, test func (e *echo.Echo)){
 	}
 }
 
-func TestUsers(t *testing.T) {
-
+func setUpContainerForIntegrationTests() *dig.Container {
+	initViper()
 	container := dig.New()
-	container.Provide(mockMailer)
-	container.Provide(mockFacebookClient)
 	container.Provide(db.ConfigureRedis)
 	container.Provide(configureEcho)
+	container.Provide(sessionModel)
+	return container
+}
+
+func TestUsers(t *testing.T) {
+	container := setUpContainerForIntegrationTests()
+	container.Provide(mockMailer)
+	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
 		c, b, _ := request("GET", "/users", nil, e, "")
@@ -76,11 +82,9 @@ func TestUsers(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	container := dig.New()
+	container := setUpContainerForIntegrationTests()
 	container.Provide(mockMailer)
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c, b, _ := request("GET", "/users/1", nil, e, "")
@@ -90,11 +94,9 @@ func TestUser(t *testing.T) {
 }
 
 func TestLoginSuccess(t *testing.T) {
-	container := dig.New()
+	container := setUpContainerForIntegrationTests()
 	container.Provide(mockMailer)
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
@@ -111,11 +113,9 @@ func TestLoginSuccess(t *testing.T) {
 }
 
 func TestLoginFail(t *testing.T) {
-	container := dig.New()
+	container := setUpContainerForIntegrationTests()
 	container.Provide(mockMailer)
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
@@ -125,17 +125,15 @@ func TestLoginFail(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	container := dig.New()
+	container := setUpContainerForIntegrationTests()
+	container.Provide(mockFacebookClient)
 
 	m := &serviceMocks.Mailer{}
 	m.On("SendMail", "from@yandex.ru", "newroot@yandex.ru", "registration confirmation", mock.AnythingOfType("string"), "smtp.yandex.ru:465", "username", "password")
-
 	container.Provide(func() services.Mailer {
 		return m
 	})
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
@@ -168,11 +166,10 @@ func TestRegister(t *testing.T) {
 
 
 func TestStaticIndex(t *testing.T) {
-	container := dig.New()
+
+	container := setUpContainerForIntegrationTests()
 	container.Provide(mockMailer)
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c, _, _ := request("GET", "/index.html", nil, e, "")
@@ -181,11 +178,10 @@ func TestStaticIndex(t *testing.T) {
 }
 
 func TestStaticRoot(t *testing.T) {
-	container := dig.New()
+
+	container := setUpContainerForIntegrationTests()
 	container.Provide(mockMailer)
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c, b, _ := request("GET", "/", nil, e, "")
@@ -196,11 +192,10 @@ func TestStaticRoot(t *testing.T) {
 
 
 func TestStaticAssets(t *testing.T) {
-	container := dig.New()
+
+	container := setUpContainerForIntegrationTests()
 	container.Provide(mockMailer)
 	container.Provide(mockFacebookClient)
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		c, b, _ := request("GET", "/assets/main.js", nil, e, "")
@@ -211,6 +206,9 @@ func TestStaticAssets(t *testing.T) {
 
 
 func TestFacebookCallback(t *testing.T) {
+	container := setUpContainerForIntegrationTests()
+	container.Provide(mockMailer)
+
 	f := &facebookMocks.FacebookClient{}
 	f.On("Exchange",
 		//mock.AnythingOfType("&oauth2.Config"),
@@ -221,13 +219,10 @@ func TestFacebookCallback(t *testing.T) {
 	}, nil)
 	f.On("GetInfo", "accessToken456").Return(fb.Result{"email": "email@example.com"}, nil)
 
-	container := dig.New()
 	container.Provide(mockMailer)
 	container.Provide(func() facebook.FacebookClient {
 		return f
 	})
-	container.Provide(db.ConfigureRedis)
-	container.Provide(configureEcho)
 
 	runTest(container, func (e *echo.Echo){
 		req := test.NewRequest("GET", "/auth/fb/callback?code=test0123", nil)
