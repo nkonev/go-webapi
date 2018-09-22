@@ -26,15 +26,6 @@ import (
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient) *echo.Echo {
-	viper.SetConfigName("config")
-	viper.AddConfigPath("./config")     // path to look for the config file in
-	viper.AddConfigPath("./config-dev") // call multiple times to add many search paths
-	viper.SetEnvPrefix("GO_EXAMPLE")
-	viper.AutomaticEnv()
-	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
-	}
 
 	redisAddr := viper.GetString("redis.addr")
 	redisPassword := viper.GetString("redis.password")
@@ -99,6 +90,21 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	return e
 }
 
+func initViper() {
+	viper.SetConfigName("config")
+	viper.AddConfigPath("./config")
+	// path to look for the config file in
+	viper.AddConfigPath("./config-dev")
+	// call multiple times to add many search paths
+	viper.SetEnvPrefix("GO_EXAMPLE")
+	viper.AutomaticEnv()
+	err := viper.ReadInConfig()
+	// Find and read the config file
+	if err != nil { // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+}
+
 func getStaticMiddleware(box packr.Box) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -142,6 +148,8 @@ func getAuthMiddleware(sm session.SessionModel, whitelist []regexp.Regexp) echo.
 }
 
 func main() {
+	initViper()
+
 	container := dig.New()
 	container.Provide(func() services.Mailer {
 		return &services.MailerImpl{}
@@ -149,20 +157,17 @@ func main() {
 	container.Provide(func() facebook.FacebookClient {
 		return &facebook.FacebookClientImpl{}
 	})
-	container.Provide(func(m services.Mailer, f facebook.FacebookClient) *echo.Echo {
-		return configureEcho(m, f);
-	})
+	container.Provide(configureEcho)
 
-	err := container.Invoke(func(e *echo.Echo) {
-		runEcho(e);
-	})
+	err := container.Invoke(runEcho)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func runEcho(e *echo.Echo) {
-	address := viper.GetString("address") // todo rely on side effect of configureEcho()
+	// rely on viper import and it's configured by
+	address := viper.GetString("address")
 
 	log.Info("Starting server")
 	// Start server
