@@ -1,6 +1,9 @@
 package main
 
-import "github.com/labstack/echo"
+import (
+	"github.com/labstack/echo"
+)
+
 import (
 	test "net/http/httptest"
 	"testing"
@@ -19,6 +22,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/oauth2"
 	fb "github.com/huandu/facebook"
+	"github.com/labstack/gommon/log"
 )
 
 
@@ -51,6 +55,10 @@ func mockFacebookClient() facebook.FacebookClient {
 }
 
 func runTest(container *dig.Container, test func (e *echo.Echo)){
+	if migrationErr := container.Invoke(runMigration); migrationErr != nil {
+		log.Panicf("Error during invoke migration: %v", migrationErr)
+	}
+
 	if err := container.Invoke(func (e *echo.Echo){
 		defer e.Close()
 
@@ -66,6 +74,9 @@ func setUpContainerForIntegrationTests() *dig.Container {
 	container.Provide(db.ConfigureRedis)
 	container.Provide(configureEcho)
 	container.Provide(sessionModel)
+	container.Provide(db.ConnectDb, dig.Name("migrationSqlxConnection"))
+	container.Provide(db.ConnectDb, dig.Name("appSqlxConnection"))
+
 	return container
 }
 

@@ -1,4 +1,6 @@
-address: ":1234"
+server:
+  address: ":1234"
+  shutdown.timeout: "10s"
 
 redis:
   addr: 172.24.0.3:6379

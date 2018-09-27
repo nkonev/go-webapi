@@ -24,14 +24,12 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/dig"
 	"github.com/go-redis/redis"
+	"github.com/jmoiron/sqlx"
 )
 
-func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client, sessionModel session.SessionModel) *echo.Echo {
-	postgresqlConnectString := viper.GetString("postgresql.connectString")
-	maxPostgreConns := viper.GetInt("postgresql.maxOpenConnections")
-	minPostgreConns := viper.GetInt("postgresql.minOpenConnections")
-	dropObjects := viper.GetBool("postgresql.dropObjects")
-	dropObjectsSql := viper.GetString("postgresql.dropObjectsSql")
+func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client,
+	sessionModel session.SessionModel, sqlConnection echoConnection) *echo.Echo {
+
 
 	fromAddress := viper.GetString("mail.registration.fromAddress")
 	subject := viper.GetString("mail.registration.subject")
@@ -47,9 +45,8 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
 
-	db0 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
-	db.MigrateX(db0, dropObjects, dropObjectsSql)
-	db1 := db.ConnectDb(postgresqlConnectString, maxPostgreConns, minPostgreConns)
+	db1 := sqlConnection.Connection
+
 	userModel := user.NewUserModel(db1)
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
@@ -156,15 +153,39 @@ func main() {
 	container.Provide(sessionModel)
 	container.Provide(configureEcho)
 
-	err := container.Invoke(runEcho)
-	if err != nil {
-		panic(err)
+	container.Provide(db.ConnectDb, dig.Name("migrationSqlxConnection"))
+	container.Provide(db.ConnectDb, dig.Name("appSqlxConnection"))
+
+	if migrationErr := container.Invoke(runMigration); migrationErr != nil {
+		log.Fatalf("Error during invoke migration: %v", migrationErr)
 	}
+
+	if echoErr := container.Invoke(runEcho); echoErr != nil {
+		log.Fatalf("Error during invoke echo: %v", echoErr)
+	}
+	log.Infof("Shutting down")
+}
+
+type migrationConnection struct {
+	dig.In
+	Connection *sqlx.DB `name:"migrationSqlxConnection"`
+}
+
+type echoConnection struct {
+	dig.In
+	Connection *sqlx.DB `name:"appSqlxConnection"`
+}
+
+func runMigration(p migrationConnection){
+	dropObjects := viper.GetBool("postgresql.dropObjects")
+	dropObjectsSql := viper.GetString("postgresql.dropObjectsSql")
+	db.MigrateX(p.Connection, dropObjects, dropObjectsSql)
 }
 
 // rely on viper import and it's configured by
 func runEcho(e *echo.Echo) {
-	address := viper.GetString("address")
+	address := viper.GetString("server.address")
+	shutdownTimeout := viper.GetDuration("server.shutdown.timeout")
 
 	log.Info("Starting server")
 	// Start server in another goroutine
@@ -180,9 +201,9 @@ func runEcho(e *echo.Echo) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	log.Infof("Got signal %v", os.Interrupt)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	log.Infof("Got signal %v - will forcibly close after %v", os.Interrupt, shutdownTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel() // releases resources if slowOperation completes before timeout elapses
 	if err := e.Shutdown(ctx); err != nil {
 		log.Fatal(err)
 	}
