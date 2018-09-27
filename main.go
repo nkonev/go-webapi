@@ -25,23 +25,25 @@ import (
 	"go.uber.org/dig"
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
+	"github.com/go-echo-api-test-sample/utils"
 )
+
+
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client,
 	sessionModel session.SessionModel, sqlConnection echoConnection) *echo.Echo {
 
 
-	fromAddress := viper.GetString("mail.registration.fromAddress")
+	/*fromAddress := viper.GetString("mail.registration.fromAddress")
 	subject := viper.GetString("mail.registration.subject")
 	bodyTemplate := viper.GetString("mail.registration.body.template")
 	smtpHostPort := viper.GetString("mail.smtp.address")
 	smtpUserName := viper.GetString("mail.smtp.username")
 	smtpPassword := viper.GetString("mail.smtp.password")
+	confirmationTokenTtl := viper.GetDuration("confirmation.token.ttl")*/
 
-	confirmationTokenTtl := viper.GetDuration("confirmation.token.ttl")
 	sessionTtl := viper.GetDuration("session.ttl")
 
-	url := viper.GetString("url")
 	bodyLimit := viper.GetString("server.body.limit")
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
@@ -51,7 +53,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	userModel := user.NewUserModel(db1)
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
-	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
+	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, utils.GetUrl()+fbCallback, userModel)
 
 	log.SetOutput(os.Stdout)
 
@@ -68,7 +70,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.GET("/users/:id", usersHandler.GetDetail)
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
-	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis, confirmationTokenTtl))
+	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, utils.GetUrl(), redis, confirmationTokenTtl))
 	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, redis))
 
 	// facebook

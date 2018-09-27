@@ -13,7 +13,10 @@ import (
 	"github.com/jmoiron/sqlx"
 	"errors"
 	"time"
-	)
+	"github.com/spf13/viper"
+	"github.com/go-echo-api-test-sample/utils"
+	"go.uber.org/dig"
+)
 
 type resultLists struct {
 	Users []user.User `json:"users"`
@@ -84,6 +87,22 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 		m.SendMail(fromAdress, d.Username, subject, body, smtpHostPort, smtpUserName, smtpPassword)
 		return context.JSON(http.StatusOK, H{"message": "You successful registered, check your email"})
 	}
+}
+
+type EchoRegisterHandler struct {
+	dig.Out
+}
+
+func (h *handler) MakeRegisterHandler(m services.Mailer, redis *redis.Client) echo.HandlerFunc {
+	fromAddress := viper.GetString("mail.registration.fromAddress")
+	subject := viper.GetString("mail.registration.subject")
+	bodyTemplate := viper.GetString("mail.registration.body.template")
+	smtpHostPort := viper.GetString("mail.smtp.address")
+	smtpUserName := viper.GetString("mail.smtp.username")
+	smtpPassword := viper.GetString("mail.smtp.password")
+	confirmationTokenTtl := viper.GetDuration("confirmation.token.ttl")
+
+	return h.Register(m, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, utils.GetUrl(), redis, confirmationTokenTtl);
 }
 
 func generateConfirmLink(url string, uuid string) string {
