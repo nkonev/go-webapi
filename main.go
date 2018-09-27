@@ -42,6 +42,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	sessionTtl := viper.GetDuration("session.ttl")
 
 	url := viper.GetString("url")
+	bodyLimit := viper.GetString("server.body.limit")
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
 
@@ -61,7 +62,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*", "/confirm.*")))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
-	e.Use(middleware.BodyLimit("2M"))
+	e.Use(middleware.BodyLimit(bodyLimit))
 
 	e.POST("/auth/login", getLogin(sessionModel, userModel, sessionTtl))
 	e.GET("/users/:id", usersHandler.GetDetail)

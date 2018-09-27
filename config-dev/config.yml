@@ -1,6 +1,7 @@
 server:
   address: ":1234"
   shutdown.timeout: "10s"
+  body.limit: "2M"
 
 redis:
   addr: 172.24.0.3:6379
