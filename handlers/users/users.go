@@ -93,21 +93,25 @@ func generateConfirmLink(url string, uuid string) string {
 const fieldUserName = "username"
 const fieldPassword = "password"
 
+func getKey(token string) string {
+	return "registration:"+token;
+}
+
 func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, passwordHash []byte, confirmationTokenTtl time.Duration) error {
 	userData := map[string]interface{}{
 		fieldUserName: usernameEmail,
 		fieldPassword: passwordHash,
 	}
-	c := redis.HMSet("registration:"+token, userData)
+	c := redis.HMSet(getKey(token), userData)
 	if c.Err() != nil {
 		return c.Err()
 	}
-	redis.Expire("registration:"+token, confirmationTokenTtl)
+	redis.Expire(getKey(token), confirmationTokenTtl)
 	return nil
 }
 // todo introduce model for this token
 func getValueByTokenFromRedis(redis *redis.Client, token string) (string, string, error) {
-	redisResponse := redis.HGetAll("registration:"+token)
+	redisResponse := redis.HGetAll(getKey(token))
 	if map0, err := redisResponse.Result(); err != nil {
 		return "", "", redisResponse.Err()
 	} else {
