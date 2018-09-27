@@ -163,7 +163,7 @@ func main() {
 	if echoErr := container.Invoke(runEcho); echoErr != nil {
 		log.Fatalf("Error during invoke echo: %v", echoErr)
 	}
-	log.Infof("Shutting down")
+	log.Infof("Exit program")
 }
 
 type migrationConnection struct {
@@ -187,7 +187,7 @@ func runEcho(e *echo.Echo) {
 	address := viper.GetString("server.address")
 	shutdownTimeout := viper.GetDuration("server.shutdown.timeout")
 
-	log.Info("Starting server")
+	log.Info("Starting server...")
 	// Start server in another goroutine
 	go func() {
 		if err := e.Start(address); err != nil {
@@ -195,7 +195,7 @@ func runEcho(e *echo.Echo) {
 		}
 	}()
 
-	log.Info("Waiting for interrupt (2) (Ctrl+C)")
+	log.Info("Server started. Waiting for interrupt (2) (Ctrl+C)")
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 10 seconds.
 	quit := make(chan os.Signal)
@@ -206,5 +206,7 @@ func runEcho(e *echo.Echo) {
 	defer cancel() // releases resources if slowOperation completes before timeout elapses
 	if err := e.Shutdown(ctx); err != nil {
 		log.Fatal(err)
+	} else {
+		log.Infof("Server successfully shut down")
 	}
 }
