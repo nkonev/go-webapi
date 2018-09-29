@@ -4,7 +4,7 @@ go:
   - "1.10"
 
 install:
-  - "curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh"
+  - "curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh"
   - "dep version"
   - "dep ensure -v"
 
