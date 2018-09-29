@@ -9,4 +9,6 @@ install:
   - "dep ensure -v -vendor-only"
 
 script:
+  - "pwd"
+  - "ls -lah"
   - "go test"
