@@ -25,10 +25,11 @@ import (
 	"go.uber.org/dig"
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
+	"github.com/go-echo-api-test-sample/models/confirmation_token"
 )
 
-func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient, redis *redis.Client,
-	sessionModel session.SessionModel, sqlConnection echoConnection) *echo.Echo {
+func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient,
+	sessionModel session.SessionModel, sqlConnection echoConnection, tm confirmation_token.ConfirmationTokenModel) *echo.Echo {
 
 
 	fromAddress := viper.GetString("mail.registration.fromAddress")
@@ -68,8 +69,8 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.GET("/users/:id", usersHandler.GetDetail)
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
-	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, redis, confirmationTokenTtl))
-	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, redis))
+	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, confirmationTokenTtl, tm))
+	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, tm))
 
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())
@@ -153,6 +154,7 @@ func main() {
 	container.Provide(db.ConfigureRedis)
 	container.Provide(sessionModel)
 	container.Provide(configureEcho)
+	container.Provide(confirmation_token.NewConfirmationTokenModel)
 
 	container.Provide(db.ConnectDb, dig.Name("migrationSqlxConnection"))
 	container.Provide(db.ConnectDb, dig.Name("appSqlxConnection"))

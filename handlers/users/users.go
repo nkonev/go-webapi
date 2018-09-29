@@ -2,18 +2,17 @@ package users
 
 import (
 	"net/http"
-
 	"github.com/labstack/echo"
 	"github.com/go-echo-api-test-sample/models/user"
 	"github.com/go-echo-api-test-sample/services"
 	"github.com/satori/go.uuid"
 	"strings"
-	"github.com/go-redis/redis"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 	"github.com/jmoiron/sqlx"
 	"errors"
-	"time"
-	)
+	"github.com/go-echo-api-test-sample/models/confirmation_token"
+)
 
 type resultLists struct {
 	Users []user.User `json:"users"`
@@ -60,7 +59,7 @@ func (h *handler) GetProfile(c echo.Context) error {
 
 func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string,
 	smtpHostPort string, smtpUserName string, smtpPassword string,
-	url string, redis *redis.Client, confirmationTokenTtl time.Duration) echo.HandlerFunc {
+	url string, confirmationTokenTtl time.Duration, tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
 
 	return func (context echo.Context) error {
 		d := &RegisterDTO{}
@@ -76,7 +75,7 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 			return passwordHashErr
 		}
 
-		if e := saveTokenToRedis(redis, uuidStr, d.Username, passwordHash, confirmationTokenTtl); e != nil {
+		if e := tm.SaveTokenToRedis(uuidStr, &confirmation_token.TempUser{d.Username, string(passwordHash)}, confirmationTokenTtl); e != nil {
 			return e
 		}
 
@@ -90,49 +89,17 @@ func generateConfirmLink(url string, uuid string) string {
 	return url + "/confirm/registration?token="+uuid
 }
 
-const fieldUserName = "username"
-const fieldPassword = "password"
-
-func getKey(token string) string {
-	return "registration:"+token;
-}
-
-func saveTokenToRedis(redis *redis.Client, token string, usernameEmail string, passwordHash []byte, confirmationTokenTtl time.Duration) error {
-	userData := map[string]interface{}{
-		fieldUserName: usernameEmail,
-		fieldPassword: passwordHash,
-	}
-	c := redis.HMSet(getKey(token), userData)
-	if c.Err() != nil {
-		return c.Err()
-	}
-	redis.Expire(getKey(token), confirmationTokenTtl)
-	return nil
-}
-// todo introduce model for this token
-func getValueByTokenFromRedis(redis *redis.Client, token string) (string, string, error) {
-	redisResponse := redis.HGetAll(getKey(token))
-	if map0, err := redisResponse.Result(); err != nil {
-		return "", "", redisResponse.Err()
-	} else {
-		username := map0[fieldUserName]
-		password := map0[fieldPassword]
-
-		return username, password, nil
-	}
-}
-
-func (h *handler) ConfirmRegistration(db *sqlx.DB, client *redis.Client) echo.HandlerFunc {
+func (h *handler) ConfirmRegistration(db *sqlx.DB, tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
 	return func (context echo.Context) error {
 		token := context.Request().URL.Query().Get("token")
 
 		if len(token) == 0 {
 			return errors.New("Zero length token param")
 		}
-		if username, passwordHash, err := getValueByTokenFromRedis(client, token); err != nil {
+		if tempUser, err := tm.GetValueByTokenFromRedis(token); err != nil {
 			return err
 		} else {
-			e := h.UserModel.CreateUser(username, passwordHash)
+			e := h.UserModel.CreateUser(tempUser.Username, tempUser.PasswordHash)
 			if e != nil {
 				return e
 			}

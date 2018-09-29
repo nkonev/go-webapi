@@ -23,6 +23,7 @@ import (
 	"golang.org/x/oauth2"
 	fb "github.com/huandu/facebook"
 	"github.com/labstack/gommon/log"
+	"github.com/go-echo-api-test-sample/models/confirmation_token"
 )
 
 
@@ -76,6 +77,7 @@ func setUpContainerForIntegrationTests() *dig.Container {
 	container.Provide(sessionModel)
 	container.Provide(db.ConnectDb, dig.Name("migrationSqlxConnection"))
 	container.Provide(db.ConnectDb, dig.Name("appSqlxConnection"))
+	container.Provide(confirmation_token.NewConfirmationTokenModel)
 
 	return container
 }
