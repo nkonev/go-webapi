@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/stretchr/testify/assert"
-	"github.com/go-echo-api-test-sample/models/user"
+	"github.com/nkonev/go-echo-api-test-sample/models/user"
 )
 
 type (

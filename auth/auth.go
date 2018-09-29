@@ -3,12 +3,12 @@ package auth
 import (
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
-	"github.com/go-echo-api-test-sample/models/session"
+	"github.com/nkonev/go-echo-api-test-sample/models/session"
 	"net/http"
 	"regexp"
 	"golang.org/x/crypto/bcrypt"
 	"github.com/pkg/errors"
-	"github.com/go-echo-api-test-sample/models/user"
+	"github.com/nkonev/go-echo-api-test-sample/models/user"
 	"time"
 )
 

@@ -3,15 +3,15 @@ package users
 import (
 	"net/http"
 	"github.com/labstack/echo"
-	"github.com/go-echo-api-test-sample/models/user"
-	"github.com/go-echo-api-test-sample/services"
+	"github.com/nkonev/go-echo-api-test-sample/models/user"
+	"github.com/nkonev/go-echo-api-test-sample/services"
 	"github.com/satori/go.uuid"
 	"strings"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 	"github.com/jmoiron/sqlx"
 	"errors"
-	"github.com/go-echo-api-test-sample/models/confirmation_token"
+	"github.com/nkonev/go-echo-api-test-sample/models/confirmation_token"
 )
 
 type resultLists struct {
