@@ -9,6 +9,7 @@ install:
   - "dep ensure -v -vendor-only"
 
 script:
+  - "cd $GOPATH"
   - "pwd"
   - "ls -lah"
   - "go test"
