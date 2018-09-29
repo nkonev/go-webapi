@@ -5,7 +5,7 @@ go:
 
 install:
   - "curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh"
-  - "curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh /sbin/wait-for-it.sh && chmod +x /sbin/wait-for-it.sh"
+  - "curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > /sbin/wait-for-it.sh && chmod +x /sbin/wait-for-it.sh"
   - "docker-compose up -d"
   - "wait-for-it.sh -t 30 172.24.0.2:5432 -- echo 'postgres is up'"
   - "wait-for-it.sh -t 30 172.24.0.3:6379 -- echo 'redis is up'"
