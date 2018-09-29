@@ -4,7 +4,8 @@ go:
   - "1.10"
 
 cache:
-  - "/home/travis/gopath/src/github.com/nkonev/go-echo-api-test-sample/vendor"
+  directories:
+    - "/home/travis/gopath/src/github.com/nkonev/go-echo-api-test-sample/vendor"
 
 install:
   - "curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh"
