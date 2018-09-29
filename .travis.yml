@@ -6,7 +6,7 @@ go:
 install:
   - "curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh"
   - "dep version"
-  - "dep ensure"
+  - "dep ensure -v -vendor-only"
 
 script:
   - "go test"
