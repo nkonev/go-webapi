@@ -23,8 +23,9 @@ func TestFindByID(t *testing.T) {
 	mockDB, mock, sqlxDB := MockDB(t)
 	defer mockDB.Close()
 
-	var cols []string = []string{"id", "name"}
-	mock.ExpectQuery("SELECT *").WillReturnRows(sqlmock.NewRows(cols).AddRow(1, "foobar"))
+	var cols []string = []string{"id", "email"}
+	mock.ExpectQuery("SELECT *").WillReturnRows(sqlmock.NewRows(cols).
+		AddRow(1, "foobar"))
 
 	um := NewUserModel(sqlxDB)
 	u, e := um.FindByID(1)
@@ -44,10 +45,10 @@ func TestFindAll(t *testing.T) {
 	u1 := User{ID: 1, Email: null.StringFrom("foobar")}
 	u2 := User{ID: 2, Email: null.StringFrom("barbaz")}
 
-	var cols []string = []string{"id", "name"}
+	var cols []string = []string{"id", "email"}
 	mock.ExpectQuery("SELECT *").WillReturnRows(sqlmock.NewRows(cols).
-		AddRow(u1.ID, u1.Email).
-		AddRow(u2.ID, u2.Email))
+		AddRow(u1.ID, u1.Email.String).
+		AddRow(u2.ID, u2.Email.String))
 
 	um := NewUserModel(sqlxDB)
 	u, _ := um.FindAll()
