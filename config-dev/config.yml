@@ -4,7 +4,7 @@ server:
   body.limit: "2M"
 
 redis:
-  addr: 127.0.0.1:6379
+  addr: 172.24.0.3:6379
   password: ""
   db: 0
   flushOnStart: true
@@ -12,7 +12,7 @@ redis:
 postgresql:
   # connect_timeout ./vendor/github.com/lib/pq/doc.go in seconds
   # statement_timeout https://postgrespro.ru/docs/postgrespro/9.6/runtime-config-client in milliseconds
-  connectString: "host=127.0.0.1 user=postgres password=postgres dbname=postgres connect_timeout=2 statement_timeout=2000 sslmode=disable"
+  connectString: "host=172.24.0.2 user=postgres password=postgresqlPassword dbname=postgres connect_timeout=2 statement_timeout=2000 sslmode=disable"
   maxOpenConnections: 8
   maxIdleConnections: 2
   dropObjects: true
