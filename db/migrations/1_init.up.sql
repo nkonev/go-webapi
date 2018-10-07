@@ -1,10 +1,10 @@
 CREATE TABLE users (
     id SERIAL NOT NULL PRIMARY KEY,
-    name text,
-    surname text,
-	  lastname text,
-	  password text NOT NULL
+    email text,
+    facebook_id varchar(64),
+    creation_type varchar(32) NOT NULL,
+	  password text
 );
-INSERT INTO users VALUES
-(DEFAULT, 'root', 's', 'l', 'password'),
-(DEFAULT, 'vojtechvitek', '', '', 'password');
+INSERT INTO users(email, password, creation_type) VALUES
+('root', 'password', 'email'),
+('vojtechvitek', 'password', 'email');

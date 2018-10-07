@@ -29,8 +29,12 @@ func NewHandler(u user.UserModel) *handler {
 }
 
 type RegisterDTO struct {
-	Username string // email
+	Email    string // email
 	Password string
+}
+
+type ResetPasswordDTO struct {
+	Email string
 }
 
 func (h *handler) GetIndex(c echo.Context) error {
@@ -75,12 +79,12 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 			return passwordHashErr
 		}
 
-		if e := tm.SaveTokenToRedis(uuidStr, &confirmation_token.TempUser{d.Username, string(passwordHash)}, confirmationTokenTtl); e != nil {
+		if e := tm.SaveTokenToRedis(uuidStr, &confirmation_token.TempUser{d.Email, string(passwordHash)}, confirmationTokenTtl); e != nil {
 			return e
 		}
 
 		body := strings.Replace(bodyTemplate, "__link__", link, 1)
-		m.SendMail(fromAdress, d.Username, subject, body, smtpHostPort, smtpUserName, smtpPassword)
+		m.SendMail(fromAdress, d.Email, subject, body, smtpHostPort, smtpUserName, smtpPassword)
 		return context.JSON(http.StatusOK, H{"message": "You successful registered, check your email"})
 	}
 }
@@ -99,7 +103,7 @@ func (h *handler) ConfirmRegistration(db *sqlx.DB, tm confirmation_token.Confirm
 		if tempUser, err := tm.GetValueByTokenFromRedis(token); err != nil {
 			return err
 		} else {
-			e := h.UserModel.CreateUser(tempUser.Username, tempUser.PasswordHash)
+			e := h.UserModel.CreateUserByEmail(tempUser.Email, tempUser.PasswordHash)
 			if e != nil {
 				return e
 			}

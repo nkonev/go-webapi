@@ -11,7 +11,7 @@ type ConfirmationTokenModel interface {
 }
 
 type TempUser struct {
-	Username string
+	Email        string
 	PasswordHash string
 }
 
@@ -32,7 +32,7 @@ func getKey(token string) string {
 
 func (i *confirmationTokenModelImpl) SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error {
 	userData := map[string]interface{}{
-		fieldUserName: u.Username,
+		fieldUserName: u.Email,
 		fieldPassword: u.PasswordHash,
 	}
 	c := i.redis.HMSet(getKey(token), userData)
@@ -52,7 +52,7 @@ func (i *confirmationTokenModelImpl) GetValueByTokenFromRedis(token string) (Tem
 		username := map0[fieldUserName]
 		password := map0[fieldPassword]
 
-		return TempUser{Username: username, PasswordHash:password}, nil
+		return TempUser{Email: username, PasswordHash:password}, nil
 	}
 
 }

@@ -1,3 +1,4 @@
 vendor/
 go-echo-api-test-sample
 main
+.idea

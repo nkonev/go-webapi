@@ -91,6 +91,7 @@ func TestUsers(t *testing.T) {
 		c, b, _ := request("GET", "/users", nil, e, "")
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, b)
+		log.Infof("Got body: %v", b)
 	})
 }
 
@@ -112,7 +113,7 @@ func TestLoginSuccess(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
-		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "password"}`), e, "")
+		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"email": "root", "password": "password"}`), e, "")
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
 		assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
@@ -131,7 +132,7 @@ func TestLoginFail(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
-		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "root", "password": "pass_-word"}`), e, "")
+		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"email": "root", "password": "pass_-word"}`), e, "")
 		assert.Equal(t, http.StatusInternalServerError, c)// todo
 		assert.Empty(t, hm.Get("Set-Cookie"))
 	})
@@ -149,7 +150,7 @@ func TestRegister(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
-		c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
+		c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"email": "newroot@yandex.ru", "password": "password"}`), e, "")
 		assert.Equal(t, http.StatusOK, c1)
 		assert.Empty(t, hm1.Get("Set-Cookie"))
 
@@ -165,7 +166,7 @@ func TestRegister(t *testing.T) {
 		assert.Equal(t, http.StatusOK, c2)
 
 		// login
-		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"username": "newroot@yandex.ru", "password": "password"}`), e, "")
+		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"email": "newroot@yandex.ru", "password": "password"}`), e, "")
 		assert.Equal(t, http.StatusOK, c)
 		assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
 		assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
@@ -230,7 +231,7 @@ func TestFacebookCallback(t *testing.T) {
 		"test0123").Return(&oauth2.Token{
 		AccessToken: "accessToken456",
 	}, nil)
-	f.On("GetInfo", "accessToken456").Return(fb.Result{"email": "email@example.com"}, nil)
+	f.On("GetInfo", "accessToken456").Return(fb.Result{"email": "email@example.com", "id": "123456qwerty"}, nil)
 
 	container.Provide(mockMailer)
 	container.Provide(func() facebook.FacebookClient {

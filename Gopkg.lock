@@ -71,6 +71,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:1582dd711e6e5ef92d6245a5dd0646da19d0d0acb94ea615d43896b7b6c6620b"
+  name = "github.com/guregu/null"
+  packages = ["."]
+  pruneopts = ""
+  revision = "80515d440932108546bcade467bb7d6968e812e2"
+  version = "v3.4.0"
+
+[[projects]]
   branch = "master"
   digest = "1:9b7c5846d70f425d7fe279595e32a20994c6075e87be03b5c367ed07280877c5"
   name = "github.com/hashicorp/hcl"
@@ -404,6 +412,7 @@
     "github.com/Boostport/migration/driver/postgres",
     "github.com/go-redis/redis",
     "github.com/gobuffalo/packr",
+    "github.com/guregu/null",
     "github.com/huandu/facebook",
     "github.com/jmoiron/sqlx",
     "github.com/labstack/echo",

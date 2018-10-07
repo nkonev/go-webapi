@@ -88,12 +88,12 @@ func (h *handler) CallBackHandler() echo.HandlerFunc {
 		}
 		log.Infof("Got facebook response: %v", res)
 
-		emailRaw := res.Get("email")
-		log.Infof("Got facebook email: %v", emailRaw)
-		email := emailRaw.(string)
+		idRaw := res.Get("id")
+		log.Infof("Got facebook id: %v", idRaw)
+		facebookId := idRaw.(string)
 
-		if err := h.userModel.CreateUser(email, ""); err == nil {
-			c.HTML(200, `You are successfully registered as `+email)
+		if err := h.userModel.CreateUserByFacebook(facebookId); err == nil {
+			c.HTML(200, `You are successfully registered as `+facebookId)
 			return nil
 		} else {
 			return err

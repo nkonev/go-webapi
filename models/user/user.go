@@ -1,17 +1,18 @@
 package user
 
 import (
+	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/gommon/log"
-	"strconv"
 )
 
 type (
 	UserModel interface {
 		FindByID(id string) (*User, error)
 		FindAll() ([]User, error)
-		FindByLogin(login string) (*User, error)
-		CreateUser(login string, passwordHash string) (error)
+		FindByEmail(login string) (*User, error)
+		CreateUserByEmail(email string, passwordHash string) (error)
+		CreateUserByFacebook(facebookId string) (error)
 	}
 
 	UserModelImpl struct {
@@ -19,11 +20,11 @@ type (
 	}
 
 	User struct {
-		ID   int    `json:"id" db:"id"`
-		Name string `json:"name" db:"name"`
-		Password string `json:"-"`
-		Surname string
-		Lastname string
+		ID       int    `json:"id" db:"id"`
+		Email    null.String `json:"email" db:"email"`
+		Password null.String `json:"-"`
+		CreationType  string `json:"creationType" db:"creation_type"`
+		FacebookId null.String `json:"facebookId" db:"facebook_id"`
 	}
 
 )
@@ -57,10 +58,10 @@ func (u *UserModelImpl) FindAll() ([]User, error) {
 	return users, nil
 }
 
-func (u *UserModelImpl) FindByLogin(login string) (*User, error) {
+func (u *UserModelImpl) FindByEmail(email string) (*User, error) {
 	var users []User
 
-	err := u.db.Select(&users, "SELECT * FROM users where name = $1 limit 1", login)
+	err := u.db.Select(&users, "SELECT * FROM users where email = $1 limit 1", email)
 	if err != nil {
 		return nil, err
 	}
@@ -70,27 +71,12 @@ func (u *UserModelImpl) FindByLogin(login string) (*User, error) {
 	return &users[0], nil
 }
 
-func (u *UserModelImpl) CreateUser(login, passwordHash string) error {
-	_, error := u.db.Exec("INSERT INTO users (name, surname, lastname, password) VALUES ($1, '', '', $2)", login, passwordHash)
-	return error
+func (u *UserModelImpl) CreateUserByEmail(email, passwordHash string) error {
+	_, err := u.db.Exec("INSERT INTO users (email, password, creation_type) VALUES ($1, $2, 'email')", email, passwordHash)
+	return err
 }
 
-func (u *User) GetPID() (pid string){
-	return strconv.Itoa(u.ID)
-}
-
-func (u *User) PutPID(pid string) {
-	if id, e := strconv.Atoi(pid); e != nil {
-		log.Panicf("Cannot convert to")
-	} else {
-		u.ID = id
-	}
-}
-
-func (u *User) GetPassword() (password string){
-	return u.Password
-}
-
-func (u *User) PutPassword(password string){
-	u.Password = password
+func (u *UserModelImpl) CreateUserByFacebook(facebookId string) (error) {
+	_, err := u.db.Exec("INSERT INTO users (facebook_id, creation_type) VALUES ($1, 'facebook')", facebookId)
+	return err
 }

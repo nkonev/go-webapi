@@ -43,7 +43,7 @@ func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel sess
 }
 
 type LoginDTO struct{
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -53,20 +53,24 @@ func LoginManager(context echo.Context, sessionModel session.SessionModel, userM
 		return err
 	}
 
-	userEntity, e  := userModel.FindByLogin(m.Username)
+	userEntity, e := userModel.FindByEmail(m.Email)
 	if e != nil {
 		return e
 	}
 	if userEntity == nil {
-		return errors.Errorf("User %v not found", m.Username)
+		return errors.Errorf("User %v not found", m.Email)
 	}
 
-	passwordCompareError := bcrypt.CompareHashAndPassword([]byte(userEntity.GetPassword()), []byte(m.Password))
+	if !userEntity.Password.Valid {
+		log.Errorf("Null password in database")
+		return errors.Errorf("Bad password")
+	}
+	passwordCompareError := bcrypt.CompareHashAndPassword([]byte(userEntity.Password.String), []byte(m.Password))
 	if passwordCompareError != nil {
 		return errors.Errorf("Bad password")
 	}
 
-	sessionId, sessionCreateError := sessionModel.CreateSession(m.Username, sessionTtl)
+	sessionId, sessionCreateError := sessionModel.CreateSession(m.Email, sessionTtl)
 	if sessionCreateError != nil {
 		return sessionCreateError
 	}

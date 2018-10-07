@@ -16,21 +16,21 @@ type (
 
 func (u *UsersModelStub) FindByID(id string) (*user.User, error) {
 	return &user.User{
-		ID:   1,
-		Name: "foo",
+		ID:    1,
+		Email: "foo",
 	}, nil
 }
 func (u *UsersModelStub) FindByLogin(id string) (*user.User, error) {
 	return &user.User{
-		ID:   1,
-		Name: "foo",
+		ID:    1,
+		Email: "foo",
 	}, nil
 }
 func (u *UsersModelStub) FindAll() ([]user.User, error) {
 	users := []user.User{}
 	users = append(users, user.User{
-		ID:   100,
-		Name: "foo",
+		ID:    100,
+		Email: "foo",
 	})
 	return users, nil
 }
