@@ -8,11 +8,11 @@ import (
 
 type (
 	UserModel interface {
-		FindByID(id string) (*User, error)
+		FindByID(id int) (*User, error)
 		FindAll() ([]User, error)
 		FindByEmail(login string) (*User, error)
-		CreateUserByEmail(email string, passwordHash string) (error)
-		CreateUserByFacebook(facebookId string) (error)
+		CreateUserByEmail(email string, passwordHash string) error
+		CreateUserByFacebook(facebookId string) error
 	}
 
 	UserModelImpl struct {
@@ -20,13 +20,12 @@ type (
 	}
 
 	User struct {
-		ID       int    `json:"id" db:"id"`
-		Email    null.String `json:"email" db:"email"`
-		Password null.String `json:"-"`
-		CreationType  string `json:"creationType" db:"creation_type"`
-		FacebookId null.String `json:"facebookId" db:"facebook_id"`
+		ID           int         `json:"id" db:"id"`
+		Email        null.String `json:"email" db:"email"`
+		Password     null.String `json:"-"`
+		CreationType string      `json:"creationType" db:"creation_type"`
+		FacebookId   null.String `json:"facebookId" db:"facebook_id"`
 	}
-
 )
 
 func NewUserModel(db *sqlx.DB) *UserModelImpl {
@@ -35,14 +34,14 @@ func NewUserModel(db *sqlx.DB) *UserModelImpl {
 	}
 }
 
-func (u *UserModelImpl) FindByID(id string) (*User, error) {
+func (u *UserModelImpl) FindByID(id int) (*User, error) {
 	var users []User
 
 	err := u.db.Select(&users, "SELECT * FROM users where id = $1 limit 1", id)
 	if err != nil {
 		return nil, err
 	}
-	if len(users)==0 {
+	if len(users) == 0 {
 		return nil, nil
 	}
 	return &users[0], nil
@@ -65,7 +64,7 @@ func (u *UserModelImpl) FindByEmail(email string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(users)==0 {
+	if len(users) == 0 {
 		return nil, nil
 	}
 	return &users[0], nil
@@ -76,7 +75,7 @@ func (u *UserModelImpl) CreateUserByEmail(email, passwordHash string) error {
 	return err
 }
 
-func (u *UserModelImpl) CreateUserByFacebook(facebookId string) (error) {
+func (u *UserModelImpl) CreateUserByFacebook(facebookId string) error {
 	_, err := u.db.Exec("INSERT INTO users (facebook_id, creation_type) VALUES ($1, 'facebook')", facebookId)
 	return err
 }

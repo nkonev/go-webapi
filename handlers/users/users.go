@@ -1,17 +1,18 @@
 package users
 
 import (
-	"net/http"
+	"errors"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
+	"github.com/nkonev/go-echo-api-test-sample/models/confirmation_token"
 	"github.com/nkonev/go-echo-api-test-sample/models/user"
 	"github.com/nkonev/go-echo-api-test-sample/services"
 	"github.com/satori/go.uuid"
-	"strings"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
-	"github.com/jmoiron/sqlx"
-	"errors"
-	"github.com/nkonev/go-echo-api-test-sample/models/confirmation_token"
 )
 
 type resultLists struct {
@@ -50,7 +51,11 @@ func (h *handler) GetIndex(c echo.Context) error {
 
 func (h *handler) GetDetail(c echo.Context) error {
 	id := c.Param("id")
-	u, e := h.UserModel.FindByID(id)
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+	u, e := h.UserModel.FindByID(idInt)
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, H{"error": "We had error ("})
 	}
@@ -65,7 +70,7 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 	smtpHostPort string, smtpUserName string, smtpPassword string,
 	url string, confirmationTokenTtl time.Duration, tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
 
-	return func (context echo.Context) error {
+	return func(context echo.Context) error {
 		d := &RegisterDTO{}
 		if err := context.Bind(d); err != nil {
 			return err
@@ -90,11 +95,11 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 }
 
 func generateConfirmLink(url string, uuid string) string {
-	return url + "/confirm/registration?token="+uuid
+	return url + "/confirm/registration?token=" + uuid
 }
 
 func (h *handler) ConfirmRegistration(db *sqlx.DB, tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
-	return func (context echo.Context) error {
+	return func(context echo.Context) error {
 		token := context.Request().URL.Query().Get("token")
 
 		if len(token) == 0 {

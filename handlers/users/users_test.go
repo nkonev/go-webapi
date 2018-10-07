@@ -1,40 +1,44 @@
 package users
 
 import (
+	"github.com/guregu/null"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo"
-	"github.com/stretchr/testify/assert"
 	"github.com/nkonev/go-echo-api-test-sample/models/user"
+	"github.com/stretchr/testify/assert"
 )
 
 type (
 	UsersModelStub struct{}
 )
 
-func (u *UsersModelStub) FindByID(id string) (*user.User, error) {
+func (u *UsersModelStub) FindByID(id int) (*user.User, error) {
 	return &user.User{
 		ID:    1,
-		Email: "foo",
+		Email: null.StringFrom("foo"),
 	}, nil
 }
-func (u *UsersModelStub) FindByLogin(id string) (*user.User, error) {
+func (u *UsersModelStub) FindByEmail(email string) (*user.User, error) {
 	return &user.User{
 		ID:    1,
-		Email: "foo",
+		Email: null.StringFrom("foo"),
 	}, nil
 }
 func (u *UsersModelStub) FindAll() ([]user.User, error) {
 	users := []user.User{}
 	users = append(users, user.User{
 		ID:    100,
-		Email: "foo",
+		Email: null.StringFrom("foo"),
 	})
 	return users, nil
 }
-func (u *UsersModelStub)CreateUser(login string, passwordHash string) (error){
+func (u *UsersModelStub) CreateUserByEmail(login string, passwordHash string) error {
+	return nil
+}
+func (u *UsersModelStub) CreateUserByFacebook(facebookId string) error {
 	return nil
 }
 
@@ -50,7 +54,7 @@ func TestGetDetail(t *testing.T) {
 	u := &UsersModelStub{}
 	h := NewHandler(u)
 
-	var userJSON = `{"id":1,"name":"foo","Surname":"","Lastname":""}`
+	var userJSON = `{"id":1,"email":"foo","creationType":"","facebookId":null}`
 
 	if assert.NoError(t, h.GetDetail(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -68,7 +72,7 @@ func TestGetIndex(t *testing.T) {
 	u := &UsersModelStub{}
 	h := NewHandler(u)
 
-	var userJSON = `{"users":[{"id":100,"name":"foo","Surname":"","Lastname":""}]}`
+	var userJSON = `{"users":[{"id":100,"email":"foo","creationType":"","facebookId":null}]}`
 
 	if assert.NoError(t, h.GetIndex(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
