@@ -45,7 +45,7 @@ func TestFindAll(t *testing.T) {
 	u1 := User{ID: 1, Email: null.StringFrom("foobar")}
 	u2 := User{ID: 2, Email: null.StringFrom("barbaz")}
 
-	var cols []string = []string{"id", "email"}
+	var cols []string = []string{"id", "ttemail"}
 	mock.ExpectQuery("SELECT *").WillReturnRows(sqlmock.NewRows(cols).
 		AddRow(u1.ID, u1.Email.String).
 		AddRow(u2.ID, u2.Email.String))

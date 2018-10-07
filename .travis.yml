@@ -18,4 +18,4 @@ install:
 
 script:
   - "pwd"
-  - "go test"
+  - "go test ./..."
