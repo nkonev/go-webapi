@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nkonev/go-echo-api-test-sample/auth"
-	"github.com/nkonev/go-echo-api-test-sample/db"
-	"github.com/nkonev/go-echo-api-test-sample/handlers/facebook"
-	"github.com/nkonev/go-echo-api-test-sample/handlers/users"
-	"github.com/nkonev/go-echo-api-test-sample/models/session"
-	"github.com/nkonev/go-echo-api-test-sample/models/user"
-	"github.com/nkonev/go-echo-api-test-sample/services"
+	"github.com/nkonev/go-webapi/auth"
+	"github.com/nkonev/go-webapi/db"
+	"github.com/nkonev/go-webapi/handlers/facebook"
+	"github.com/nkonev/go-webapi/handlers/users"
+	"github.com/nkonev/go-webapi/models/session"
+	"github.com/nkonev/go-webapi/models/user"
+	"github.com/nkonev/go-webapi/services"
 	"github.com/gobuffalo/packr"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -25,7 +25,7 @@ import (
 	"go.uber.org/dig"
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
-	"github.com/nkonev/go-echo-api-test-sample/models/confirmation_token"
+	"github.com/nkonev/go-webapi/models/confirmation_token"
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient,

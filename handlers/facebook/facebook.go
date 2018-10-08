@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"errors"
 	fb "github.com/huandu/facebook"
-	"github.com/nkonev/go-echo-api-test-sample/models/user"
+	"github.com/nkonev/go-webapi/models/user"
 	"golang.org/x/net/context"
 )
 
