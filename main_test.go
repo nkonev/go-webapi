@@ -75,8 +75,8 @@ func setUpContainerForIntegrationTests() *dig.Container {
 	container.Provide(db.ConfigureRedis)
 	container.Provide(configureEcho)
 	container.Provide(sessionModel)
-	container.Provide(db.ConnectDb, dig.Name("migrationSqlxConnection"))
-	container.Provide(db.ConnectDb, dig.Name("appSqlxConnection"))
+	container.Provide(db.MakeMigrationConnection)
+	container.Provide(db.MakeAppConnection)
 	container.Provide(confirmation_token.NewConfirmationTokenModel)
 
 	return container

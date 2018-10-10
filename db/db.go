@@ -20,7 +20,7 @@ func ConnectDbInternal(postgresqlConnectString string, maxPostgreConns int, minP
 	if err = db.Ping(); err != nil {
 		log.Panic(err)
 	}
-
+	log.Infof("Successfully created db connection")
 	return db
 }
 
@@ -30,4 +30,16 @@ func ConnectDb() *sqlx.DB {
 	minPostgreConns := viper.GetInt("postgresql.minOpenConnections")
 
 	return ConnectDbInternal(postgresqlConnectString, maxPostgreConns, minPostgreConns)
+}
+
+type MigrationConnection *sqlx.DB
+
+type AppConnection *sqlx.DB
+
+func MakeMigrationConnection() MigrationConnection {
+	return ConnectDb();
+}
+
+func MakeAppConnection() AppConnection {
+	return ConnectDb();
 }

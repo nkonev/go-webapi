@@ -10,26 +10,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nkonev/go-webapi/auth"
-	"github.com/nkonev/go-webapi/db"
-	"github.com/nkonev/go-webapi/handlers/facebook"
-	"github.com/nkonev/go-webapi/handlers/users"
-	"github.com/nkonev/go-webapi/models/session"
-	"github.com/nkonev/go-webapi/models/user"
-	"github.com/nkonev/go-webapi/services"
+	"github.com/go-redis/redis"
 	"github.com/gobuffalo/packr"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/nkonev/go-webapi/auth"
+	"github.com/nkonev/go-webapi/db"
+	"github.com/nkonev/go-webapi/handlers/facebook"
+	"github.com/nkonev/go-webapi/handlers/users"
+	"github.com/nkonev/go-webapi/models/confirmation_token"
+	"github.com/nkonev/go-webapi/models/session"
+	"github.com/nkonev/go-webapi/models/user"
+	"github.com/nkonev/go-webapi/services"
 	"github.com/spf13/viper"
 	"go.uber.org/dig"
-	"github.com/go-redis/redis"
-	"github.com/jmoiron/sqlx"
-	"github.com/nkonev/go-webapi/models/confirmation_token"
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient,
-	sessionModel session.SessionModel, sqlConnection appConnection, tm confirmation_token.ConfirmationTokenModel) *echo.Echo {
+	sessionModel session.SessionModel, sqlConnection db.AppConnection, tm confirmation_token.ConfirmationTokenModel) *echo.Echo {
 
 
 	fromAddress := viper.GetString("mail.registration.fromAddress")
@@ -47,9 +46,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
 
-	db1 := sqlConnection.Connection
-
-	userModel := user.NewUserModel(db1)
+	userModel := user.NewUserModel(sqlConnection)
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
 	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
@@ -70,7 +67,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
 	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, confirmationTokenTtl, tm))
-	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(db1, tm))
+	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(sqlConnection, tm))
 
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())
@@ -156,8 +153,8 @@ func main() {
 	container.Provide(configureEcho)
 	container.Provide(confirmation_token.NewConfirmationTokenModel)
 
-	container.Provide(db.ConnectDb, dig.Name("migrationSqlxConnection"))
-	container.Provide(db.ConnectDb, dig.Name("appSqlxConnection"))
+	container.Provide(db.MakeMigrationConnection)
+	container.Provide(db.MakeAppConnection)
 
 	if migrationErr := container.Invoke(runMigration); migrationErr != nil {
 		log.Fatalf("Error during invoke migration: %v", migrationErr)
@@ -169,20 +166,10 @@ func main() {
 	log.Infof("Exit program")
 }
 
-type migrationConnection struct {
-	dig.In
-	Connection *sqlx.DB `name:"migrationSqlxConnection"`
-}
-
-type appConnection struct {
-	dig.In
-	Connection *sqlx.DB `name:"appSqlxConnection"`
-}
-
-func runMigration(p migrationConnection){
+func runMigration(p db.MigrationConnection){
 	dropObjects := viper.GetBool("postgresql.dropObjects")
 	dropObjectsSql := viper.GetString("postgresql.dropObjectsSql")
-	db.MigrateX(p.Connection, dropObjects, dropObjectsSql)
+	db.MigrateX(p, dropObjects, dropObjectsSql)
 }
 
 // rely on viper import and it's configured by
