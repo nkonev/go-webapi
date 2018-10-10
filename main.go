@@ -29,7 +29,7 @@ import (
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient,
-	sessionModel session.SessionModel, sqlConnection echoConnection, tm confirmation_token.ConfirmationTokenModel) *echo.Echo {
+	sessionModel session.SessionModel, sqlConnection appConnection, tm confirmation_token.ConfirmationTokenModel) *echo.Echo {
 
 
 	fromAddress := viper.GetString("mail.registration.fromAddress")
@@ -174,7 +174,7 @@ type migrationConnection struct {
 	Connection *sqlx.DB `name:"migrationSqlxConnection"`
 }
 
-type echoConnection struct {
+type appConnection struct {
 	dig.In
 	Connection *sqlx.DB `name:"appSqlxConnection"`
 }
