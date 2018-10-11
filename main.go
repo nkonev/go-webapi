@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/nkonev/go-webapi/handlers/password_reset"
 	"net/http"
 	"os"
 	"os/signal"
@@ -50,6 +51,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
 	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
+	passwordResetHandler := password_reset.NewHandler()
 
 	log.SetOutput(os.Stdout)
 
@@ -67,7 +69,9 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
 	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, confirmationTokenTtl, tm))
-	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(sqlConnection, tm))
+	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(tm))
+	e.POST("/password-reset", passwordResetHandler.RequestPasswordReset)
+	e.GET("/confirm/password", passwordResetHandler.ConfirmPasswordReset)
 
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())

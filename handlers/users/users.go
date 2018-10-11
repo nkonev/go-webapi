@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
 	"github.com/nkonev/go-webapi/models/confirmation_token"
 	"github.com/nkonev/go-webapi/models/user"
@@ -98,7 +97,7 @@ func generateConfirmLink(url string, uuid string) string {
 	return url + "/confirm/registration?token=" + uuid
 }
 
-func (h *handler) ConfirmRegistration(db *sqlx.DB, tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
+func (h *handler) ConfirmRegistration(tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		token := context.Request().URL.Query().Get("token")
 
