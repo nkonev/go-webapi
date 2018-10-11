@@ -27,10 +27,13 @@ postgresql:
 
 
 mail:
+  fromAddress: "from@yandex.ru"
   registration:
-    fromAddress: "from@yandex.ru"
     subject: "registration confirmation"
     body.template: "Go to link for complete your registration __link__"
+  password.reset:
+    subject: "Restore your password"
+    body.template: "Go to link to restore your password __link__"
   smtp:
     address: "smtp.yandex.ru:465"
     username: "username"

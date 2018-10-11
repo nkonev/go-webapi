@@ -1,4 +1,4 @@
-package confirmation_token
+package token
 
 import (
 	"time"

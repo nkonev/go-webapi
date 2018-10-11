@@ -3,7 +3,7 @@ package users
 import (
 	"errors"
 	"github.com/labstack/echo"
-	"github.com/nkonev/go-webapi/models/confirmation_token"
+	"github.com/nkonev/go-webapi/models/token"
 	"github.com/nkonev/go-webapi/models/user"
 	"github.com/nkonev/go-webapi/services"
 	"github.com/satori/go.uuid"
@@ -65,9 +65,8 @@ func (h *handler) GetProfile(c echo.Context) error {
 	return c.JSON(http.StatusOK, H{"message": "You see your profile"})
 }
 
-func (h *handler) Register(m services.Mailer, fromAdress string, subject string, bodyTemplate string,
-	smtpHostPort string, smtpUserName string, smtpPassword string,
-	url string, confirmationTokenTtl time.Duration, tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
+func (h *handler) Register(m services.Mailer, subject string, bodyTemplate string,
+	url, confirmHandlerPath string, confirmationTokenTtl time.Duration, tm token.ConfirmationTokenModel) echo.HandlerFunc {
 
 	return func(context echo.Context) error {
 		d := &RegisterDTO{}
@@ -76,28 +75,28 @@ func (h *handler) Register(m services.Mailer, fromAdress string, subject string,
 		}
 
 		uuidStr := uuid.NewV4().String()
-		link := generateConfirmLink(url, uuidStr)
+		link := generateConfirmLink(url, confirmHandlerPath, uuidStr)
 
 		passwordHash, passwordHashErr := bcrypt.GenerateFromPassword([]byte(d.Password), bcrypt.DefaultCost)
 		if passwordHashErr != nil {
 			return passwordHashErr
 		}
 
-		if e := tm.SaveTokenToRedis(uuidStr, &confirmation_token.TempUser{d.Email, string(passwordHash)}, confirmationTokenTtl); e != nil {
+		if e := tm.SaveTokenToRedis(uuidStr, &token.TempUser{d.Email, string(passwordHash)}, confirmationTokenTtl); e != nil {
 			return e
 		}
 
 		body := strings.Replace(bodyTemplate, "__link__", link, 1)
-		m.SendMail(fromAdress, d.Email, subject, body, smtpHostPort, smtpUserName, smtpPassword)
+		m.SendMail(d.Email, subject, body)
 		return context.JSON(http.StatusOK, H{"message": "You successful registered, check your email"})
 	}
 }
 
-func generateConfirmLink(url string, uuid string) string {
-	return url + "/confirm/registration?token=" + uuid
+func generateConfirmLink(url, handlerPath string, uuid string) string {
+	return url + handlerPath + "?token=" + uuid
 }
 
-func (h *handler) ConfirmRegistration(tm confirmation_token.ConfirmationTokenModel) echo.HandlerFunc {
+func (h *handler) ConfirmRegistration(tm token.ConfirmationTokenModel) echo.HandlerFunc {
 	return func(context echo.Context) error {
 		token := context.Request().URL.Query().Get("token")
 

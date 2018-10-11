@@ -10,7 +10,7 @@ type (
 	UserModel interface {
 		FindByID(id int) (*User, error)
 		FindAll() ([]User, error)
-		FindByEmail(login string) (*User, error)
+		FindByEmail(email string) (*User, error)
 		CreateUserByEmail(email string, passwordHash string) error
 		CreateUserByFacebook(facebookId string) error
 	}

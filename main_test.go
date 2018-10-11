@@ -23,7 +23,7 @@ import (
 	"golang.org/x/oauth2"
 	fb "github.com/huandu/facebook"
 	"github.com/labstack/gommon/log"
-	"github.com/nkonev/go-webapi/models/confirmation_token"
+	"github.com/nkonev/go-webapi/models/token"
 )
 
 
@@ -77,7 +77,8 @@ func setUpContainerForIntegrationTests() *dig.Container {
 	container.Provide(sessionModel)
 	container.Provide(db.MakeMigrationConnection)
 	container.Provide(db.MakeAppConnection)
-	container.Provide(confirmation_token.NewConfirmationTokenModel)
+	container.Provide(token.NewConfirmationTokenModel)
+	container.Provide(token.NewPasswordResetTokenModel)
 
 	return container
 }

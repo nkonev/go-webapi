@@ -20,7 +20,7 @@ import (
 	"github.com/nkonev/go-webapi/db"
 	"github.com/nkonev/go-webapi/handlers/facebook"
 	"github.com/nkonev/go-webapi/handlers/users"
-	"github.com/nkonev/go-webapi/models/confirmation_token"
+	"github.com/nkonev/go-webapi/models/token"
 	"github.com/nkonev/go-webapi/models/session"
 	"github.com/nkonev/go-webapi/models/user"
 	"github.com/nkonev/go-webapi/services"
@@ -29,15 +29,10 @@ import (
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient,
-	sessionModel session.SessionModel, sqlConnection db.AppConnection, tm confirmation_token.ConfirmationTokenModel) *echo.Echo {
+	sessionModel session.SessionModel, sqlConnection db.AppConnection, tm token.ConfirmationTokenModel, prm token.PasswordResetTokenModel) *echo.Echo {
 
-
-	fromAddress := viper.GetString("mail.registration.fromAddress")
-	subject := viper.GetString("mail.registration.subject")
-	bodyTemplate := viper.GetString("mail.registration.body.template")
-	smtpHostPort := viper.GetString("mail.smtp.address")
-	smtpUserName := viper.GetString("mail.smtp.username")
-	smtpPassword := viper.GetString("mail.smtp.password")
+	registrationSubject := viper.GetString("mail.registration.subject")
+	registrationBodyTemplate := viper.GetString("mail.registration.body.template")
 
 	confirmationTokenTtl := viper.GetDuration("confirmation.token.ttl")
 	sessionTtl := viper.GetDuration("session.ttl")
@@ -47,11 +42,16 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	facebookClientId := viper.GetString("facebook.clientId")
 	facebookSecret := viper.GetString("facebook.clientSecret")
 
+	passwordResetTokenTtl := viper.GetDuration("password.reset.token.ttl")
+
 	userModel := user.NewUserModel(sqlConnection)
 	usersHandler := users.NewHandler(userModel)
 	fbCallback := "/auth/fb/callback"
 	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
-	passwordResetHandler := password_reset.NewHandler()
+	passwordResetSubject := viper.GetString("mail.password.reset.subject")
+	passwordResetBodyTemplate := viper.GetString("mail.password.reset.body.template")
+	confirmPasswordResetHandlerPath := "/confirm/password-reset"
+	passwordResetHandler := password_reset.NewHandler(passwordResetSubject, passwordResetBodyTemplate, url, confirmPasswordResetHandlerPath, userModel, prm, passwordResetTokenTtl, mailer)
 
 	log.SetOutput(os.Stdout)
 
@@ -64,14 +64,15 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
+	confirmRegistrationHandlerPath := "/confirm/registration"
 	e.POST("/auth/login", getLogin(sessionModel, userModel, sessionTtl))
 	e.GET("/users/:id", usersHandler.GetDetail)
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
-	e.POST("/auth/register", usersHandler.Register(mailer, fromAddress, subject, bodyTemplate, smtpHostPort, smtpUserName, smtpPassword, url, confirmationTokenTtl, tm))
-	e.GET("/confirm/registration", usersHandler.ConfirmRegistration(tm))
+	e.POST("/auth/register", usersHandler.Register(mailer, registrationSubject, registrationBodyTemplate, url, confirmRegistrationHandlerPath, confirmationTokenTtl, tm))
+	e.GET(confirmRegistrationHandlerPath, usersHandler.ConfirmRegistration(tm))
 	e.POST("/password-reset", passwordResetHandler.RequestPasswordReset)
-	e.GET("/confirm/password", passwordResetHandler.ConfirmPasswordReset)
+	e.GET(confirmPasswordResetHandlerPath, passwordResetHandler.ConfirmPasswordReset)
 
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())
@@ -147,7 +148,12 @@ func main() {
 	initViper()
 	container := dig.New()
 	container.Provide(func() services.Mailer {
-		return &services.MailerImpl{}
+		smtpHostPort := viper.GetString("mail.smtp.address")
+		smtpUserName := viper.GetString("mail.smtp.username")
+		smtpPassword := viper.GetString("mail.smtp.password")
+		fromAddress := viper.GetString("mail.fromAddress")
+
+		return &services.MailerImpl{fromAddress, smtpHostPort, smtpUserName, smtpPassword}
 	})
 	container.Provide(func() facebook.FacebookClient {
 		return &facebook.FacebookClientImpl{}
@@ -155,10 +161,11 @@ func main() {
 	container.Provide(db.ConfigureRedis)
 	container.Provide(sessionModel)
 	container.Provide(configureEcho)
-	container.Provide(confirmation_token.NewConfirmationTokenModel)
+	container.Provide(token.NewConfirmationTokenModel)
 
 	container.Provide(db.MakeMigrationConnection)
 	container.Provide(db.MakeAppConnection)
+	container.Provide(token.NewPasswordResetTokenModel)
 
 	if migrationErr := container.Invoke(runMigration); migrationErr != nil {
 		log.Fatalf("Error during invoke migration: %v", migrationErr)

@@ -10,16 +10,18 @@ import (
 )
 
 type Mailer interface {
-	SendMail(fromAddress string, toAddress string, subject string, body string, smtpHostPort string, username string, password string)
+	SendMail(toAddress string, subject string, body string)
 }
 
-type MailerImpl struct{}
+type MailerImpl struct{
+	fromAddress, smtpHostPort, username, password string
+}
 
 // SSL/TLS Email Example
 // https://gist.github.com/chrisgillis/10888032
-func (*MailerImpl) SendMail(fromAddress string, toAddress string, subject string, body string, smtpHostPort string, username string, password string) {
+func (m *MailerImpl) SendMail(toAddress string, subject string, body string) {
 
-	from := mail.Address{"", fromAddress}
+	from := mail.Address{"", m.fromAddress}
 	to   := mail.Address{"", toAddress}
 	subj := subject
 
@@ -37,9 +39,9 @@ func (*MailerImpl) SendMail(fromAddress string, toAddress string, subject string
 	message += "\r\n" + body
 
 	// Connect to the SMTP Server
-	host, _, _ := net.SplitHostPort(smtpHostPort)
+	host, _, _ := net.SplitHostPort(m.smtpHostPort)
 
-	auth := smtp.PlainAuth("",username, password, host)
+	auth := smtp.PlainAuth("", m.username, m.password, host)
 
 	// TLS config
 	tlsconfig := &tls.Config {
@@ -50,7 +52,7 @@ func (*MailerImpl) SendMail(fromAddress string, toAddress string, subject string
 	// Here is the key, you need to call tls.Dial instead of smtp.Dial
 	// for smtp servers running on 465 that require an ssl connection
 	// from the very beginning (no starttls)
-	conn, err := tls.Dial("tcp", smtpHostPort, tlsconfig)
+	conn, err := tls.Dial("tcp", m.smtpHostPort, tlsconfig)
 	defer conn.Close()
 	if err != nil {
 		log.Panic(err)
