@@ -11,12 +11,12 @@ type PasswordResetTokenModel interface {
 	FindTokenInRedis(token string) (int, error)
 }
 
-func NewPasswordResetTokenModel(redis redis.Client) *passwordResetTokenModelImpl {
-	return &passwordResetTokenModelImpl{redis: redis}
-}
-
 type passwordResetTokenModelImpl struct {
 	redis redis.Client
+}
+
+func NewPasswordResetTokenModel(redis *redis.Client) PasswordResetTokenModel {
+	return &passwordResetTokenModelImpl{redis: *redis}
 }
 
 func getPasswordResetKey(token string) string {
@@ -27,7 +27,7 @@ func (model *passwordResetTokenModelImpl) SaveTokenToRedis(token string, passwor
 	return model.redis.Set(getPasswordResetKey(token), userId, passwordResetTokenTtl).Err()
 }
 
-func (model *passwordResetTokenModelImpl) HasTokenInRedis(token string) (int, error) {
+func (model *passwordResetTokenModelImpl) FindTokenInRedis(token string) (int, error) {
 	getResult := model.redis.Get(getPasswordResetKey(token))
 	if getResult.Err() != nil {
 		return -1, getResult.Err()

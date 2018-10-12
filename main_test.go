@@ -2,9 +2,6 @@ package main
 
 import (
 	"github.com/labstack/echo"
-)
-
-import (
 	test "net/http/httptest"
 	"testing"
 	"github.com/stretchr/testify/assert"
@@ -144,7 +141,7 @@ func TestRegister(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	m := &serviceMocks.Mailer{}
-	m.On("SendMail", "from@yandex.ru", "newroot@yandex.ru", "registration confirmation", mock.AnythingOfType("string"), "smtp.yandex.ru:465", "username", "password")
+	m.On("SendMail",  "newroot@yandex.ru", "registration confirmation", mock.AnythingOfType("string"))
 	container.Provide(func() services.Mailer {
 		return m
 	})
@@ -156,7 +153,7 @@ func TestRegister(t *testing.T) {
 		assert.Empty(t, hm1.Get("Set-Cookie"))
 
 		var emailBody string;
-		emailBody = m.Calls[0].Arguments[3].(string)
+		emailBody = m.Calls[0].Arguments[2].(string)
 		assert.Contains(t, emailBody, "http://localhost:1234/confirm/registration?token=")
 
 		confirmUrl := xurls.Strict.FindString(emailBody)
