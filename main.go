@@ -29,7 +29,7 @@ import (
 )
 
 func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClient,
-	sessionModel session.SessionModel, sqlConnection db.AppConnection, tm token.ConfirmationTokenModel, prm token.PasswordResetTokenModel) *echo.Echo {
+	sessionModel session.SessionModel, sqlConnection db.AppConnection, tm token.ConfirmationRegistrationTokenModel, prm token.PasswordResetTokenModel) *echo.Echo {
 
 	registrationSubject := viper.GetString("mail.registration.subject")
 	registrationBodyTemplate := viper.GetString("mail.registration.body.template")

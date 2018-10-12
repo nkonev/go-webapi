@@ -5,7 +5,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
-type ConfirmationTokenModel interface {
+type ConfirmationRegistrationTokenModel interface {
 	SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error
 	GetValueByTokenFromRedis(token string) (TempUser, error)
 }
@@ -19,7 +19,7 @@ type confirmationTokenModelImpl struct {
 	redis redis.Client
 }
 
-func NewConfirmationTokenModel(redis *redis.Client) ConfirmationTokenModel {
+func NewConfirmationTokenModel(redis *redis.Client) ConfirmationRegistrationTokenModel {
 	return &confirmationTokenModelImpl{redis: *redis}
 }
 
@@ -27,7 +27,7 @@ const fieldUserName = "username"
 const fieldPassword = "password"
 
 func getKey(token string) string {
-	return "registration:"+token;
+	return "registration:token:"+token;
 }
 
 func (i *confirmationTokenModelImpl) SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error {

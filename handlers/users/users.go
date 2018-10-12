@@ -22,6 +22,7 @@ type handler struct {
 	UserModel user.UserModel
 }
 
+// todo to utils
 type H map[string]interface{}
 
 func NewHandler(u user.UserModel) *handler {
@@ -31,10 +32,6 @@ func NewHandler(u user.UserModel) *handler {
 type RegisterDTO struct {
 	Email    string // email
 	Password string
-}
-
-type ResetPasswordDTO struct {
-	Email string
 }
 
 func (h *handler) GetIndex(c echo.Context) error {
@@ -66,7 +63,7 @@ func (h *handler) GetProfile(c echo.Context) error {
 }
 
 func (h *handler) Register(m services.Mailer, subject string, bodyTemplate string,
-	url, confirmHandlerPath string, confirmationTokenTtl time.Duration, tm token.ConfirmationTokenModel) echo.HandlerFunc {
+	url, confirmHandlerPath string, confirmationTokenTtl time.Duration, tm token.ConfirmationRegistrationTokenModel) echo.HandlerFunc {
 
 	return func(context echo.Context) error {
 		d := &RegisterDTO{}
@@ -77,6 +74,7 @@ func (h *handler) Register(m services.Mailer, subject string, bodyTemplate strin
 		uuidStr := uuid.NewV4().String()
 		link := generateConfirmLink(url, confirmHandlerPath, uuidStr)
 
+		// todo to password_utils
 		passwordHash, passwordHashErr := bcrypt.GenerateFromPassword([]byte(d.Password), bcrypt.DefaultCost)
 		if passwordHashErr != nil {
 			return passwordHashErr
@@ -92,18 +90,19 @@ func (h *handler) Register(m services.Mailer, subject string, bodyTemplate strin
 	}
 }
 
+// TODO to utils
 func generateConfirmLink(url, handlerPath string, uuid string) string {
 	return url + handlerPath + "?token=" + uuid
 }
 
-func (h *handler) ConfirmRegistration(tm token.ConfirmationTokenModel) echo.HandlerFunc {
+func (h *handler) ConfirmRegistration(tm token.ConfirmationRegistrationTokenModel) echo.HandlerFunc {
 	return func(context echo.Context) error {
-		token := context.Request().URL.Query().Get("token")
+		confirmRegistrationToken := context.Request().URL.Query().Get("token")
 
-		if len(token) == 0 {
+		if len(confirmRegistrationToken) == 0 {
 			return errors.New("Zero length token param")
 		}
-		if tempUser, err := tm.GetValueByTokenFromRedis(token); err != nil {
+		if tempUser, err := tm.GetValueByTokenFromRedis(confirmRegistrationToken); err != nil {
 			return err
 		} else {
 			e := h.UserModel.CreateUserByEmail(tempUser.Email, tempUser.PasswordHash)

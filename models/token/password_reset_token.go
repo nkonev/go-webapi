@@ -2,12 +2,13 @@ package token
 
 import (
 	"github.com/go-redis/redis"
+	"strconv"
 	"time"
 )
 
 type PasswordResetTokenModel interface {
-	SaveTokenToRedis(token string, passwordResetTokenTtl time.Duration) error
-	HasTokenInRedis(token string) (bool, error)
+	SaveTokenToRedis(token string, passwordResetTokenTtl time.Duration, userId int) error
+	FindTokenInRedis(token string) (int, error)
 }
 
 func NewPasswordResetTokenModel(redis redis.Client) *passwordResetTokenModelImpl {
@@ -18,10 +19,20 @@ type passwordResetTokenModelImpl struct {
 	redis redis.Client
 }
 
-func (model *passwordResetTokenModelImpl) SaveTokenToRedis(token string, passwordResetTokenTtl time.Duration) error {
-	return nil // todo implement
+const prefix = "password:reset:token:"
+
+func getPasswordResetKey(token string) string {
+	return prefix + token
 }
 
-func (model *passwordResetTokenModelImpl) HasTokenInRedis(token string) (bool, error) {
-	return false, nil //todo implement
+func (model *passwordResetTokenModelImpl) SaveTokenToRedis(token string, passwordResetTokenTtl time.Duration, userId int) error {
+	return model.redis.Set(getPasswordResetKey(token), userId, passwordResetTokenTtl).Err()
+}
+
+func (model *passwordResetTokenModelImpl) HasTokenInRedis(token string) (int, error) {
+	getResult := model.redis.Get(getPasswordResetKey(token))
+	if getResult.Err() != nil {
+		return -1, getResult.Err()
+	}
+	return strconv.Atoi(getResult.Val())
 }
