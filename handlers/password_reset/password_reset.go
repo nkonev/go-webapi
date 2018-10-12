@@ -6,8 +6,8 @@ import (
 	"github.com/nkonev/go-webapi/models/token"
 	"github.com/nkonev/go-webapi/models/user"
 	"github.com/nkonev/go-webapi/services"
+	"github.com/nkonev/go-webapi/utils"
 	"github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strings"
 	"time"
@@ -67,7 +67,6 @@ func (h *handler) RequestPasswordReset(c echo.Context) error {
 	return nil
 }
 
-// todo to utils
 func generateConfirmLink(url, handlerPath string, uuid string) string {
 	return url + handlerPath + "?token=" + uuid
 }
@@ -77,9 +76,6 @@ type ConfirmPasswordResetDto struct {
 	NewPassword string
 }
 
-// todo to utils
-type H map[string]interface{}
-
 func (h *handler) ConfirmPasswordReset(c echo.Context) error {
 	d := &ConfirmPasswordResetDto{}
 	if err := c.Bind(d); err != nil{
@@ -88,18 +84,17 @@ func (h *handler) ConfirmPasswordReset(c echo.Context) error {
 
 	if passwordResetToken, err := h.passwordResetTokenModel.FindTokenInRedis(d.PasswordResetToken); err != nil {
 		log.Infof("%v error during find password reset token in redis: %v", err)
-		return c.JSON(http.StatusExpectationFailed, H{"message": "Your password reset token is not found"})
+		return c.JSON(http.StatusExpectationFailed, utils.H{"message": "Your password reset token is not found"})
 	} else {
-		// todo to password_utils
-		passwordHash, passwordHashErr := bcrypt.GenerateFromPassword([]byte(d.NewPassword), bcrypt.DefaultCost)
+		passwordHash, passwordHashErr := utils.HashPassword(d.NewPassword)
 		if passwordHashErr != nil {
 			return passwordHashErr
 		}
 
-		if err := h.userModel.SetPassword(passwordResetToken, string(passwordHash)); err != nil {
+		if err := h.userModel.SetPassword(passwordResetToken, passwordHash); err != nil {
 			return err
 		}
-		return c.JSON(http.StatusOK, H{"message": "You successfully changed your password"})
+		return c.JSON(http.StatusOK, utils.H{"message": "You successfully changed your password"})
 	}
 
 	return nil

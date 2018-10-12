@@ -19,10 +19,8 @@ type passwordResetTokenModelImpl struct {
 	redis redis.Client
 }
 
-const prefix = "password:reset:token:"
-
 func getPasswordResetKey(token string) string {
-	return prefix + token
+	return "password:reset:token:" + token
 }
 
 func (model *passwordResetTokenModelImpl) SaveTokenToRedis(token string, passwordResetTokenTtl time.Duration, userId int) error {
