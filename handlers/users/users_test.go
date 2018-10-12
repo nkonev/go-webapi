@@ -42,6 +42,10 @@ func (u *UsersModelStub) CreateUserByFacebook(facebookId string) error {
 	return nil
 }
 
+func (u *UsersModelStub) SetPassword(userId int, newPassword string) error {
+	return nil
+}
+
 func TestGetDetail(t *testing.T) {
 	e := echo.New()
 	req := httptest.NewRequest(echo.GET, "/", nil)
