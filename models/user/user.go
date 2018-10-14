@@ -82,6 +82,6 @@ func (u *UserModelImpl) CreateUserByFacebook(facebookId string) error {
 }
 
 func (u *UserModelImpl) SetPassword(userId int, newPassword string) error {
-	_, err := u.db.Exec("UPDATE users SET password = $1 WHERE id = %2", newPassword, userId)
+	_, err := u.db.Exec("UPDATE users SET password = $1 WHERE id = $2", newPassword, userId)
 	return err
 }

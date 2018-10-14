@@ -43,6 +43,7 @@ url: "http://localhost:1234" # without trailing slash
 # localhost need for facebook
 
 confirmation.token.ttl: "20m"
+password.reset.token.ttl: "20m"
 session.ttl: "30m"
 
 facebook:

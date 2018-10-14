@@ -83,7 +83,7 @@ func (h *handler) ConfirmPasswordReset(c echo.Context) error {
 	}
 
 	if passwordResetToken, err := h.passwordResetTokenModel.FindTokenInRedis(d.PasswordResetToken); err != nil {
-		log.Infof("%v error during find password reset token in redis: %v", err)
+		log.Infof("error during find password reset token in redis: '%v'", err)
 		return c.JSON(http.StatusExpectationFailed, utils.H{"message": "Your password reset token is not found"})
 	} else {
 		passwordHash, passwordHashErr := utils.HashPassword(d.NewPassword)

@@ -7,4 +7,4 @@ CREATE TABLE users (
 );
 INSERT INTO users(email, password, creation_type) VALUES
 ('root', 'password', 'email'),
-('vojtechvitek', 'password', 'email');
+('test@example.com', 'password', 'email');

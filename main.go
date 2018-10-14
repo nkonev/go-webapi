@@ -59,7 +59,8 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 
 	e := echo.New()
 
-	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*", "/confirm.*")))
+	const passwordResetPath = "/password-reset"
+	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*", "/confirm.*", passwordResetPath)))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
@@ -71,8 +72,8 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.GET("/profile", usersHandler.GetProfile)
 	e.POST("/auth/register", usersHandler.Register(mailer, registrationSubject, registrationBodyTemplate, url, confirmRegistrationHandlerPath, confirmationTokenTtl, tm))
 	e.GET(confirmRegistrationHandlerPath, usersHandler.ConfirmRegistration(tm))
-	e.POST("/password-reset", passwordResetHandler.RequestPasswordReset)
-	e.GET(confirmPasswordResetHandlerPath, passwordResetHandler.ConfirmPasswordReset)
+	e.POST(passwordResetPath, passwordResetHandler.RequestPasswordReset)
+	e.POST(confirmPasswordResetHandlerPath, passwordResetHandler.ConfirmPasswordReset)
 
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())

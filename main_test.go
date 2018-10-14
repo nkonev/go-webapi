@@ -21,6 +21,7 @@ import (
 	fb "github.com/huandu/facebook"
 	"github.com/labstack/gommon/log"
 	"github.com/nkonev/go-webapi/models/token"
+	"net/url"
 )
 
 
@@ -136,6 +137,17 @@ func TestLoginFail(t *testing.T) {
 	})
 }
 
+func login(t *testing.T, e *echo.Echo, email, password string) (string) {
+	c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"email": "`+email+`", "password": "`+password+`"}`), e, "")
+	assert.Equal(t, http.StatusOK, c)
+	assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
+	const sessCookiePrefix = auth.SESSION_COOKIE+"="
+	assert.Contains(t, hm.Get(echo.HeaderSetCookie), sessCookiePrefix)
+	arr := strings.Split(hm.Get(echo.HeaderSetCookie), sessCookiePrefix)
+	assert.Equal(t, 2, len(arr))
+	return arr[1]
+}
+
 func TestRegister(t *testing.T) {
 	container := setUpContainerForIntegrationTests()
 	container.Provide(mockFacebookClient)
@@ -152,9 +164,8 @@ func TestRegister(t *testing.T) {
 		assert.Equal(t, http.StatusOK, c1)
 		assert.Empty(t, hm1.Get("Set-Cookie"))
 
-		var emailBody string;
-		emailBody = m.Calls[0].Arguments[2].(string)
-		assert.Contains(t, emailBody, "http://localhost:1234/confirm/registration?token=")
+		emailBody := m.Calls[0].Arguments[2].(string)
+		assert.Contains(t, emailBody, "Go to link for complete your registration http://localhost:1234/confirm/registration?token=")
 
 		confirmUrl := xurls.Strict.FindString(emailBody)
 		assert.Contains(t, confirmUrl, "http://localhost:1234/confirm/registration?token=")
@@ -164,11 +175,7 @@ func TestRegister(t *testing.T) {
 		assert.Equal(t, http.StatusOK, c2)
 
 		// login
-		c, _, hm := request("POST", "/auth/login", strings.NewReader(`{"email": "newroot@yandex.ru", "password": "password"}`), e, "")
-		assert.Equal(t, http.StatusOK, c)
-		assert.NotEmpty(t, hm.Get(echo.HeaderSetCookie))
-		assert.Contains(t, hm.Get(echo.HeaderSetCookie), auth.SESSION_COOKIE+"=")
-
+		login(t, e, "newroot@yandex.ru", "password");
 
 		m.AssertExpectations(t)
 	})
@@ -250,5 +257,37 @@ func TestFacebookCallback(t *testing.T) {
 
 		f.AssertExpectations(t)
 	})
+}
 
+func TestPasswordReset(t *testing.T) {
+
+	container := setUpContainerForIntegrationTests()
+	m := &serviceMocks.Mailer{}
+	m.On("SendMail",  "test@example.com", "Restore your password", mock.AnythingOfType("string"))
+	container.Provide(func() services.Mailer {
+		return m
+	})
+	container.Provide(mockFacebookClient)
+
+	runTest(container, func (e *echo.Echo){
+		c, _, _ := request("POST", "/password-reset", strings.NewReader(`{"email": "test@example.com"}`), e, "")
+		assert.Equal(t, http.StatusOK, c)
+
+		emailBody := m.Calls[0].Arguments[2].(string)
+		assert.Contains(t, emailBody, "Go to link to restore your password http://localhost:1234/confirm/password-reset?token=")
+
+		confirmUrl := xurls.Strict.FindString(emailBody)
+		log.Infof("ConfirmUrl=%v", confirmUrl)
+		url, _ := url.Parse(confirmUrl)
+		passResetToken := url.Query().Get("token")
+
+		// confirm
+		c2, _, _ := request("POST", confirmUrl, strings.NewReader(`{"passwordResetToken":"`+passResetToken+`", "newPassword": "newPassword123"}`), e, "")
+		assert.Equal(t, http.StatusOK, c2)
+
+		// login
+		login(t, e, "test@example.com", "newPassword123");
+
+		m.AssertExpectations(t)
+	})
 }
