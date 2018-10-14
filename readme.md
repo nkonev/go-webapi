@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/nkonev/go-webapi.svg?branch=master)](https://travis-ci.org/nkonev/go-webapi)
+
 Install dep
 ```
 https://golang.github.io/dep/docs/installation.html
