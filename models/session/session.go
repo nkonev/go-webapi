@@ -12,8 +12,12 @@ type SessionModel struct {
 	Redis redis.Client
 }
 
+func getSessionKey(id string) string {
+	return "session:" + id
+}
+
 func (sessionModel *SessionModel) CheckSession(key string) error {
-	kv, e := sessionModel.Redis.HGetAll(key).Result()
+	kv, e := sessionModel.Redis.HGetAll(getSessionKey(key)).Result()
 	if e != nil {
 		log.Errorf("Error during get session")
 		return e
@@ -29,11 +33,11 @@ func (sessionModel *SessionModel) CreateSession(username string, sessionTtl time
 	sessionId := uuid.NewV4().String()
 	log.Infof("Saving session %v with duration %v", sessionId, sessionTtl)
 
-	if cmd := sessionModel.Redis.HSet(sessionId, "login", username); cmd.Err() != nil {
+	if cmd := sessionModel.Redis.HSet(getSessionKey(sessionId), "login", username); cmd.Err() != nil {
 		log.Errorf("Error during save session")
 		return "error session", cmd.Err()
 	}
-	if err := sessionModel.Redis.Expire(sessionId, sessionTtl).Err(); err != nil {
+	if err := sessionModel.Redis.Expire(getSessionKey(sessionId), sessionTtl).Err(); err != nil {
 		log.Errorf("Error during set session expiration")
 		return "error session", err
 	}
