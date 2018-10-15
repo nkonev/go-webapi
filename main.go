@@ -45,7 +45,9 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	passwordResetTokenTtl := viper.GetDuration("password.reset.token.ttl")
 
 	userModel := user.NewUserModel(sqlConnection)
-	usersHandler := users.NewHandler(userModel)
+	usersHandler := users.NewUserHandler(userModel)
+	confirmRegistrationHandlerPath := "/confirm/registration"
+	registrationHandler := users.NewRegistrationHandler(mailer, registrationSubject, registrationBodyTemplate, url, confirmRegistrationHandlerPath, confirmationTokenTtl, tm, userModel)
 	fbCallback := "/auth/fb/callback"
 	facebookHandler := facebook.NewHandler(facebookClient, facebookClientId, facebookSecret, url+fbCallback, userModel)
 	passwordResetSubject := viper.GetString("mail.password.reset.subject")
@@ -65,13 +67,12 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
 
-	confirmRegistrationHandlerPath := "/confirm/registration"
 	e.POST("/auth/login", getLogin(sessionModel, userModel, sessionTtl))
 	e.GET("/users/:id", usersHandler.GetDetail)
 	e.GET("/users", usersHandler.GetIndex)
 	e.GET("/profile", usersHandler.GetProfile)
-	e.POST("/auth/register", usersHandler.Register(mailer, registrationSubject, registrationBodyTemplate, url, confirmRegistrationHandlerPath, confirmationTokenTtl, tm))
-	e.GET(confirmRegistrationHandlerPath, usersHandler.ConfirmRegistration(tm))
+	e.POST("/auth/register", registrationHandler.Register)
+	e.GET(confirmRegistrationHandlerPath, registrationHandler.ConfirmRegistration)
 	e.POST(passwordResetPath, passwordResetHandler.RequestPasswordReset)
 	e.POST(confirmPasswordResetHandlerPath, passwordResetHandler.ConfirmPasswordReset)
 

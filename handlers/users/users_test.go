@@ -56,7 +56,7 @@ func TestGetDetail(t *testing.T) {
 	c.SetParamValues("1")
 
 	u := &UsersModelStub{}
-	h := NewHandler(u)
+	h := NewUserHandler(u)
 
 	var userJSON = `{"id":1,"email":"foo","creationType":"","facebookId":null}`
 
@@ -74,7 +74,7 @@ func TestGetIndex(t *testing.T) {
 	c.SetPath("/users")
 
 	u := &UsersModelStub{}
-	h := NewHandler(u)
+	h := NewUserHandler(u)
 
 	var userJSON = `{"users":[{"id":100,"email":"foo","creationType":"","facebookId":null}]}`
 
