@@ -20,11 +20,6 @@ func NewUserHandler(u user.UserModel) *userHandler {
 	return &userHandler{u}
 }
 
-type RegisterDTO struct {
-	Email    string // email
-	Password string
-}
-
 func (h *userHandler) GetIndex(c echo.Context) error {
 	lists, e := h.UserModel.FindAll()
 	if e != nil {

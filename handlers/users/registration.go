@@ -23,6 +23,11 @@ type registrationHandler struct {
 	userModel user.UserModel
 }
 
+type RegisterDTO struct {
+	Email    string // email
+	Password string
+}
+
 func NewRegistrationHandler(mailer services.Mailer, subject string, bodyTemplate string,
 	url, confirmHandlerPath string, confirmationTokenTtl time.Duration, confirmationTokenModel token.ConfirmationRegistrationTokenModel,
 	userModel user.UserModel) *registrationHandler {
