@@ -242,7 +242,7 @@ func TestRegisterResend(t *testing.T) {
 func calculateRegisterTokens(container *dig.Container) int {
 	var result int
 	if err := container.Invoke(func(redis *redis.Client) {
-		result = len(redis.Keys(token.RegistrationTokenPrefix+"*").Val())
+		result = len(redis.Keys(token.GetRegistrationTokenPrefixForSearch()).Val())
 	}); err != nil {
 		panic(err)
 	}

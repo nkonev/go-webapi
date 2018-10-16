@@ -64,7 +64,7 @@ func (i *confirmationTokenModelImpl) DeleteToken(token string) error {
 }
 
 func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, bool, error) {
-	iter := i.redis.Scan(0, RegistrationTokenPrefix+"*", 128).Iterator()
+	iter := i.redis.Scan(0, GetRegistrationTokenPrefixForSearch(), 128).Iterator()
 	for iter.Next() {
 		key := iter.Val()
 		if found, err := i.findTokenMatchingEmail(key, email); err != nil {
@@ -92,4 +92,8 @@ func (impl *confirmationTokenModelImpl) findTokenMatchingEmail(key string, email
 	} else {
 		return false, nil // not found
 	}
+}
+
+func GetRegistrationTokenPrefixForSearch() string {
+	return RegistrationTokenPrefix+"*"
 }
