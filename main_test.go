@@ -161,13 +161,13 @@ func TestRegister(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
-		registerTokenCountBefore := calcualteRegisterTokens(container)
+		registerTokenCountBefore := calculateRegisterTokens(container)
 
 		c1, _, hm1 := request("POST", "/auth/register", strings.NewReader(`{"email": "newroot@yandex.ru", "password": "password"}`), e, "")
 		assert.Equal(t, http.StatusOK, c1)
 		assert.Empty(t, hm1.Get("Set-Cookie"))
 
-		registerTokenCountMiddle := calcualteRegisterTokens(container)
+		registerTokenCountMiddle := calculateRegisterTokens(container)
 		assert.Equal(t, registerTokenCountBefore + 1, registerTokenCountMiddle)
 
 		emailBody := m.Calls[0].Arguments[2].(string)
@@ -180,7 +180,7 @@ func TestRegister(t *testing.T) {
 		c2, _, _ := request("GET", confirmUrl, nil, e, "")
 		assert.Equal(t, http.StatusOK, c2)
 
-		registerTokenCountAfter := calcualteRegisterTokens(container)
+		registerTokenCountAfter := calculateRegisterTokens(container)
 		assert.Equal(t, registerTokenCountBefore, registerTokenCountAfter)
 
 		// login
@@ -203,7 +203,7 @@ func TestRegisterResend(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
-		registerTokenCountBefore := calcualteRegisterTokens(container)
+		registerTokenCountBefore := calculateRegisterTokens(container)
 
 		// spoof
 		request("POST", "/auth/register", strings.NewReader(`{"email": "newroot@yandex.ru", "password": "password"}`), e, "")
@@ -212,7 +212,7 @@ func TestRegisterResend(t *testing.T) {
 		assert.Equal(t, http.StatusOK, c1)
 		assert.Empty(t, hm1.Get("Set-Cookie"))
 
-		registerTokenCountMiddle := calcualteRegisterTokens(container)
+		registerTokenCountMiddle := calculateRegisterTokens(container)
 
 		// assert that on two registration call we create only one token
 		assert.Equal(t, registerTokenCountBefore + 1, registerTokenCountMiddle)
@@ -221,7 +221,7 @@ func TestRegisterResend(t *testing.T) {
 		assert.Equal(t, http.StatusOK, c2)
 		assert.Empty(t, hm2.Get("Set-Cookie"))
 
-		registerTokenCountAfterResend := calcualteRegisterTokens(container)
+		registerTokenCountAfterResend := calculateRegisterTokens(container)
 		assert.Equal(t, registerTokenCountMiddle, registerTokenCountAfterResend)
 
 		assert.Equal(t, 3, len(m.Calls))
@@ -239,7 +239,7 @@ func TestRegisterResend(t *testing.T) {
 
 }
 
-func calcualteRegisterTokens(container *dig.Container) int {
+func calculateRegisterTokens(container *dig.Container) int {
 	var result int
 	if err := container.Invoke(func(redis *redis.Client) {
 		result = len(redis.Keys(token.RegistrationTokenPrefix+"*").Val())
