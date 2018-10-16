@@ -64,6 +64,7 @@ func (i *confirmationTokenModelImpl) DeleteToken(token string) error {
 }
 
 func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, bool, error) {
+	// iterate over all keys starts with RegistrationTokenPrefix
 	iter := i.redis.Scan(0, GetRegistrationTokenPrefixForSearch(), 128).Iterator()
 	for iter.Next() {
 		key := iter.Val()
@@ -81,6 +82,7 @@ func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, boo
 }
 
 func (impl *confirmationTokenModelImpl) isHashContainsEmail(key string, email string) (bool, error) {
+	// iterate over hash fields
 	iter := impl.redis.HScan(key, 0, fieldEmail, 8).Iterator()
 	for iter.Next() {
 		if iter.Val() == email {
