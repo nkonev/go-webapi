@@ -25,7 +25,7 @@ func NewConfirmationTokenModel(redis *redis.Client) ConfirmationRegistrationToke
 	return &confirmationTokenModelImpl{redis: *redis}
 }
 
-const fieldUserName = "username"
+const fieldEmail = "email"
 const fieldPassword = "password"
 const RegistrationTokenPrefix = "registration:token:"
 func getKey(token string) string {
@@ -34,7 +34,7 @@ func getKey(token string) string {
 
 func (i *confirmationTokenModelImpl) SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error {
 	userData := map[string]interface{}{
-		fieldUserName: u.Email,
+		fieldEmail:    u.Email,
 		fieldPassword: u.PasswordHash,
 	}
 	c := i.redis.HMSet(getKey(token), userData)
@@ -51,7 +51,7 @@ func (i *confirmationTokenModelImpl) GetValueByTokenFromRedis(token string) (Tem
 	if map0, err := redisResponse.Result(); err != nil {
 		return TempUser{}, redisResponse.Err()
 	} else {
-		username := map0[fieldUserName]
+		username := map0[fieldEmail]
 		password := map0[fieldPassword]
 
 		return TempUser{Email: username, PasswordHash:password}, nil
@@ -81,7 +81,7 @@ func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, boo
 }
 
 func (impl *confirmationTokenModelImpl) findTokenMatchingEmail(key string, email string) (bool, error) {
-	iter := impl.redis.HScan(key, 0, fieldUserName, 8).Iterator()
+	iter := impl.redis.HScan(key, 0, fieldEmail, 8).Iterator()
 	for iter.Next() {
 		if iter.Val() == email {
 			return true, nil
