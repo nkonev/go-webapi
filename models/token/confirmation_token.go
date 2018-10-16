@@ -67,7 +67,7 @@ func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, boo
 	iter := i.redis.Scan(0, GetRegistrationTokenPrefixForSearch(), 128).Iterator()
 	for iter.Next() {
 		key := iter.Val()
-		if found, err := i.findTokenMatchingEmail(key, email); err != nil {
+		if found, err := i.isHashContainsEmail(key, email); err != nil {
 			return "", false, err
 		} else if found {
 			return key[len(RegistrationTokenPrefix):], true, nil
@@ -80,7 +80,7 @@ func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, boo
 	}
 }
 
-func (impl *confirmationTokenModelImpl) findTokenMatchingEmail(key string, email string) (bool, error) {
+func (impl *confirmationTokenModelImpl) isHashContainsEmail(key string, email string) (bool, error) {
 	iter := impl.redis.HScan(key, 0, fieldEmail, 8).Iterator()
 	for iter.Next() {
 		if iter.Val() == email {
