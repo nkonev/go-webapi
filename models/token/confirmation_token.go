@@ -7,7 +7,7 @@ import (
 
 type ConfirmationRegistrationTokenModel interface {
 	SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error
-	GetValueByTokenFromRedis(token string) (TempUser, error)
+	GetValueByTokenFromRedis(token string) (*TempUser, error)
 	FindTokenByEmail(email string) (string, bool, error)
 	DeleteToken(token string) error
 }
@@ -46,15 +46,15 @@ func (i *confirmationTokenModelImpl) SaveTokenToRedis(token string, u *TempUser,
 
 }
 
-func (i *confirmationTokenModelImpl) GetValueByTokenFromRedis(token string) (TempUser, error) {
+func (i *confirmationTokenModelImpl) GetValueByTokenFromRedis(token string) (*TempUser, error) {
 	redisResponse := i.redis.HGetAll(getKey(token))
 	if map0, err := redisResponse.Result(); err != nil {
-		return TempUser{}, redisResponse.Err()
+		return nil, redisResponse.Err()
 	} else {
 		username := map0[fieldEmail]
 		password := map0[fieldPassword]
 
-		return TempUser{Email: username, PasswordHash:password}, nil
+		return &TempUser{Email: username, PasswordHash:password}, nil
 	}
 
 }
