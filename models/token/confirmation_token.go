@@ -8,6 +8,8 @@ import (
 type ConfirmationRegistrationTokenModel interface {
 	SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error
 	GetValueByTokenFromRedis(token string) (TempUser, error)
+	FindTokenByEmail(email string) (string, bool, error)
+	DeleteToken(token string) error
 }
 
 type TempUser struct {
@@ -25,9 +27,9 @@ func NewConfirmationTokenModel(redis *redis.Client) ConfirmationRegistrationToke
 
 const fieldUserName = "username"
 const fieldPassword = "password"
-
+const RegistrationTokenPrefix = "registration:token:"
 func getKey(token string) string {
-	return "registration:token:"+token;
+	return RegistrationTokenPrefix +token;
 }
 
 func (i *confirmationTokenModelImpl) SaveTokenToRedis(token string, u *TempUser, confirmationTokenTtl time.Duration) error {
@@ -55,4 +57,39 @@ func (i *confirmationTokenModelImpl) GetValueByTokenFromRedis(token string) (Tem
 		return TempUser{Email: username, PasswordHash:password}, nil
 	}
 
+}
+
+func (i *confirmationTokenModelImpl) DeleteToken(token string) error {
+	return i.redis.Del(getKey(token)).Err()
+}
+
+func (i *confirmationTokenModelImpl) FindTokenByEmail(email string) (string, bool, error) {
+	iter := i.redis.Scan(0, RegistrationTokenPrefix+"*", 128).Iterator()
+	for iter.Next() {
+		key := iter.Val()
+		if found, err := i.findTokenMatchingEmail(key, email); err != nil {
+			return "", false, err
+		} else if found {
+			return key[len(RegistrationTokenPrefix):], true, nil
+		} // else continue
+	}
+	if err := iter.Err(); err != nil {
+		return "", false, err
+	} else {
+		return "", false, nil // not found
+	}
+}
+
+func (impl *confirmationTokenModelImpl) findTokenMatchingEmail(key string, email string) (bool, error) {
+	iter := impl.redis.HScan(key, 0, fieldUserName, 8).Iterator()
+	for iter.Next() {
+		if iter.Val() == email {
+			return true, nil
+		} // else continue
+	}
+	if err := iter.Err(); err != nil {
+		return false, err
+	} else {
+		return false, nil // not found
+	}
 }

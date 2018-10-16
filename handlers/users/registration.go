@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"errors"
 	"github.com/nkonev/go-webapi/models/user"
+	"github.com/labstack/gommon/log"
 )
 
 type registrationHandler struct {
@@ -49,7 +50,16 @@ func (h *registrationHandler) Register(context echo.Context) error {
 		return err
 	}
 
-	uuidStr := uuid.NewV4().String()
+	// find previous or generate
+	var uuidStr string
+	if uuidToken, found, err := h.confirmationTokenModel.FindTokenByEmail(d.Email); err != nil {
+		return err
+	} else if found {
+		uuidStr = uuidToken
+	} else {
+		uuidStr = uuid.NewV4().String()
+	}
+
 	link := generateConfirmLink(h.url, h.confirmHandlerPath, uuidStr)
 
 	passwordHash, passwordHashErr := utils.HashPassword(d.Password)
@@ -61,9 +71,14 @@ func (h *registrationHandler) Register(context echo.Context) error {
 		return e
 	}
 
-	body := strings.Replace(h.bodyTemplate, "__link__", link, 1)
+	body := h.prepareEmailBody(link)
 	h.mailer.SendMail(d.Email, h.subject, body)
+
 	return context.JSON(http.StatusOK, utils.H{"message": "You successful registered, check your email"})
+}
+
+func (h *registrationHandler) prepareEmailBody(link string) string {
+	return strings.Replace(h.bodyTemplate, "__link__", link, 1)
 }
 
 func generateConfirmLink(url, handlerPath string, uuid string) string {
@@ -82,8 +97,32 @@ func (h *registrationHandler) ConfirmRegistration(context echo.Context) error {
 		e := h.userModel.CreateUserByEmail(tempUser.Email, tempUser.PasswordHash)
 		if e != nil {
 			return e
+		} else if err := h.confirmationTokenModel.DeleteToken(confirmRegistrationToken); err != nil {
+			return err
 		}
 	}
 
 	return context.JSON(http.StatusOK, utils.H{"message": "You successful confirm your registration"})
+}
+
+
+type ResendRegisterConfirmationTokenDto struct {
+	Email    string
+}
+
+func (h *registrationHandler) ResendConfirmationToken(context echo.Context) error {
+	dto := &ResendRegisterConfirmationTokenDto{}
+	context.Bind(dto)
+
+	if uuidToken, found, err := h.confirmationTokenModel.FindTokenByEmail(dto.Email); err != nil {
+		log.Error("Error during find token by email")
+		return err
+	} else if found {
+		link := generateConfirmLink(h.url, h.confirmHandlerPath, uuidToken)
+		body := h.prepareEmailBody(link)
+		h.mailer.SendMail(dto.Email, h.subject, body)
+		return context.JSON(http.StatusOK, utils.H{"message": "You confirmation code was resent"})
+	} else {
+		return context.JSON(http.StatusOK, utils.H{"message": "Your confirmation code was not found"})
+	}
 }

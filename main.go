@@ -75,6 +75,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e.GET(confirmRegistrationHandlerPath, registrationHandler.ConfirmRegistration)
 	e.POST(passwordResetPath, passwordResetHandler.RequestPasswordReset)
 	e.POST(confirmPasswordResetHandlerPath, passwordResetHandler.ConfirmPasswordReset)
+	e.POST("/auth/register/resend-confirmation-token", registrationHandler.ResendConfirmationToken)
 
 	// facebook
 	e.Any("/auth/fb", facebookHandler.RedirectForLogin())
