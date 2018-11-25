@@ -1,4 +1,5 @@
 vendor/
-go-echo-api-test-sample
+go-webapi
 main
 .idea
+node_modules/
