@@ -1,21 +1,24 @@
-language: go
+matrix:
+  include:
+    - language: go
+      go:
+        - "1.10"
+      #cache:
+      #  directories:
+      #    - "/home/travis/gopath/src/github.com/nkonev/go-webapi/vendor"
+      install:
+        - "curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh"
+        - "curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh && chmod +x ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh"
+        - "docker-compose up -d"
+        - "wait-for-it.sh -t 30 172.24.0.2:5432 -- echo 'postgres is up'"
+        - "wait-for-it.sh -t 30 172.24.0.3:6379 -- echo 'redis is up'"
+        - "dep version"
+        - "dep ensure -v"
+      script:
+        - "pwd"
+        - "go test ./..."
 
-go:
-  - "1.10"
-
-#cache:
-#  directories:
-#    - "/home/travis/gopath/src/github.com/nkonev/go-webapi/vendor"
-
-install:
-  - "curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh"
-  - "curl https://raw.githubusercontent.com/vishnubob/wait-for-it/8ed92e8cab83cfed76ff012ed4a36cef74b28096/wait-for-it.sh > ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh && chmod +x ${TRAVIS_HOME}/gopath/bin/wait-for-it.sh"
-  - "docker-compose up -d"
-  - "wait-for-it.sh -t 30 172.24.0.2:5432 -- echo 'postgres is up'"
-  - "wait-for-it.sh -t 30 172.24.0.3:6379 -- echo 'redis is up'"
-  - "dep version"
-  - "dep ensure -v"
-
-script:
-  - "pwd"
-  - "go test ./..."
+    - language: node_js
+      node_js: 10.13.0
+      script:
+        - (cd frontend; npm run test:unit;)
