@@ -20,5 +20,10 @@ matrix:
 
     - language: node_js
       node_js: 10.13.0
+      cache:
+        directories:
+          - "/home/travis/gopath/src/github.com/nkonev/go-webapi/frontend/node_modules"
+      install:
+        - npm install
       script:
         - (cd frontend; npm run test:unit;)
