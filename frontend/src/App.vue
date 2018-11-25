@@ -10,17 +10,10 @@
 
 <script>
     import Vue from 'vue'
-    import Table from 'buefy/dist/components/table'
-    import Input from 'buefy/dist/components/input'
-    import Switch from 'buefy/dist/components/switch'
     import 'buefy/dist/buefy.css'
 
-    Vue.use(Table);
-    Vue.use(Input);
-    Vue.use(Switch);
-
     export default {
-
+        name: 'App',
     }
 </script>
 
