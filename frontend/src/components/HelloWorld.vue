@@ -6,11 +6,19 @@
       check out the
       <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
     </p>
+    <button class="button">Button</button>
+    <button class="button is-warning">Warning</button>
+    <button class="button is-danger">Danger</button>
+    <a class="button is-info is-loading">Loading</a>
+    <section>
+    <div class="field">
+      <b-switch>Default</b-switch>
+    </div>
+    </section>
     <h3>Installed CLI Plugins</h3>
     <ul>
       <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
       <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-unit-jest" target="_blank" rel="noopener">unit-jest</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-e2e-nightwatch" target="_blank" rel="noopener">e2e-nightwatch</a></li>
     </ul>
     <h3>Essential Links</h3>
     <ul>
