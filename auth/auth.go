@@ -35,7 +35,7 @@ func CheckSession(context echo.Context, next echo.HandlerFunc, sessionModel sess
 		return e
 	}
 
-	if err := sessionModel.CheckSession(c.Value); err!= nil {
+	if err := sessionModel.CheckSession(c.Value, context.Request().RequestURI); err!= nil {
 		return err
 	}
 

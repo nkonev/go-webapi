@@ -62,7 +62,7 @@ func configureEcho(mailer services.Mailer, facebookClient facebook.FacebookClien
 	e := echo.New()
 
 	const passwordResetPath = "/password-reset"
-	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/static.*", "/confirm.*", passwordResetPath)))
+	e.Use(getAuthMiddleware(sessionModel, stringsToRegexpArray("/user.*", "/auth/.*", "/confirm.*", passwordResetPath)))
 	//e.Use(middleware.Logger())
 	e.Use(middleware.Secure())
 	e.Use(middleware.BodyLimit(bodyLimit))
@@ -105,7 +105,7 @@ func getStaticMiddleware(box packr.Box) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			reqUrl := c.Request().RequestURI
-			if reqUrl == "/" || reqUrl == "/index.html" || strings.HasPrefix(reqUrl, "/assets") {
+			if reqUrl == "/" || reqUrl == "/index.html" || reqUrl == "/favicon.ico" || strings.HasPrefix(reqUrl, "/build") || strings.HasPrefix(reqUrl, "/test-assets") {
 				http.FileServer(box).
 					ServeHTTP(c.Response().Writer, c.Request())
 				return nil

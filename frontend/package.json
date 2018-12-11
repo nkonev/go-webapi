@@ -1,27 +1,100 @@
 {
-  "name": "hello-world",
-  "version": "0.1.0",
-  "private": true,
+  "name": "webapi-frontend",
+  "version": "0.0.0",
+  "description": "frontend project",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit"
+    "dev": "webpack --mode development",
+    "prod": "cross-env NODE_ENV=production webpack --mode production",
+    "test": "jest",
+    "test-cov": "jest --coverage",
+    "clear": "jest --clearCache"
   },
-  "dependencies": {
-    "buefy": "^0.7.1",
-    "vue": "^2.5.17",
-    "vue-router": "^3.0.1",
-    "vuex": "^3.0.1"
+  "repository": {
+    "type": "git",
+    "url": "http://example.com"
   },
+  "keywords": [],
+  "author": "Nikita Konev",
+  "license": "ISC",
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.1.1",
-    "@vue/cli-plugin-unit-jest": "^3.1.1",
-    "@vue/cli-service": "^3.1.4",
-    "@vue/test-utils": "^1.0.0-beta.20",
-    "babel-core": "7.0.0-bridge.0",
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
+    "@vue/test-utils": "^1.0.0-beta.26",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
+    "babel-loader": "^8.0.4",
+    "babel-plugin-dynamic-import-webpack": "^1.1.0",
+    "buefy": "^0.7.1",
+    "clean-webpack-plugin": "^1.0.0",
+    "copy-webpack-plugin": "^4.6.0",
+    "cross-env": "^5.2.0",
+    "css-loader": "^1.0.1",
+    "file-loader": "^2.0.0",
+    "html-loader": "^0.5.5",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^23.6.0",
+    "jest-serializer-vue": "^2.0.2",
+    "lodash": "^4.17.11",
+    "lodash.merge": "^4.6.1",
+    "mini-css-extract-plugin": "^0.4.5",
+    "on-build-webpack": "^0.1.0",
+    "quill": "^1.3.6",
+    "quill-image-drop-module": "^1.0.3",
+    "quill-image-resize-module": "^3.0.0",
+    "style-loader": "^0.23.1",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.2",
-    "vue-template-compiler": "^2.5.17"
+    "url-loader": "^1.1.2",
+    "vue-jest": "^3.0.1",
+    "vue-loader": "^15.4.2",
+    "vue-sticky": "^3.3.4",
+    "vue-style-loader": "^4.1.2",
+    "vue-template-compiler": "^2.5.17",
+    "vue-top-progress": "^0.5.0",
+    "webpack": "^4.26.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-livereload-plugin": "^2.1.1"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.8",
+    "@fortawesome/free-brands-svg-icons": "^5.5.0",
+    "@fortawesome/free-solid-svg-icons": "^5.5.0",
+    "@fortawesome/vue-fontawesome": "^0.1.2",
+    "@stomp/stompjs": "^5.0.2",
+    "mini-toastr": "^0.8.1",
+    "moment": "^2.22.2",
+    "vue": "^2.5.17",
+    "vue-avatar": "^2.1.7",
+    "vue-croppa": "^1.3.8",
+    "vue-form-generator": "^2.3.2",
+    "vue-infinite-loading": "^2.4.3",
+    "vue-js-modal": "^1.3.27",
+    "vue-meta": "^1.5.6",
+    "vue-multiple-back-top": "^1.0.2",
+    "vue-notifications": "^0.9.0",
+    "vue-resource": "^1.5.1",
+    "vue-router": "^3.0.2",
+    "vue-simple-spinner": "^1.2.8",
+    "vuejs-paginate": "^2.0.1",
+    "vuelidate": "^0.7.4",
+    "vuex": "^3.0.1",
+    "websocket": "^1.0.28"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "vue"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "\\.(css|less)$": "identity-obj-proxy"
+    },
+    "transform": {
+      "^.+\\.js$": "<rootDir>/node_modules/babel-jest",
+      ".*\\.(vue)$": "<rootDir>/node_modules/vue-jest"
+    },
+    "snapshotSerializers": [
+      "<rootDir>/node_modules/jest-serializer-vue"
+    ]
   }
 }

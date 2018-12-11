@@ -3,3 +3,4 @@ go-webapi
 main
 .idea
 node_modules/
+static/build

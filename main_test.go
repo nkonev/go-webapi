@@ -270,7 +270,7 @@ func TestStaticRoot(t *testing.T) {
 	runTest(container, func (e *echo.Echo){
 		c, b, _ := request("GET", "/", nil, e, "")
 		assert.Equal(t, http.StatusOK, c)
-		assert.Contains(t, b, "Hello, world!")
+		assert.Contains(t, b, "app-container")
 	})
 }
 
@@ -282,7 +282,7 @@ func TestStaticAssets(t *testing.T) {
 	container.Provide(mockFacebookClient)
 
 	runTest(container, func (e *echo.Echo){
-		c, b, _ := request("GET", "/assets/main.js", nil, e, "")
+		c, b, _ := request("GET", "/test-assets/main.js", nil, e, "")
 		assert.Equal(t, http.StatusOK, c)
 		assert.Equal(t, `console.log("Hello world");`, b)
 	})

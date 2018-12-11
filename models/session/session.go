@@ -16,14 +16,14 @@ func getSessionKey(id string) string {
 	return "session:" + id
 }
 
-func (sessionModel *SessionModel) CheckSession(key string) error {
+func (sessionModel *SessionModel) CheckSession(key string, currentUrl string) error {
 	kv, e := sessionModel.Redis.HGetAll(getSessionKey(key)).Result()
 	if e != nil {
 		log.Errorf("Error during get session")
 		return e
 	}
 	if len(kv) == 0 {
-		return errors.Errorf("Got empty session from redis")
+		return errors.Errorf("Got empty session from redis for %v", currentUrl)
 	}
 	log.Infof("Successful checked session %v", kv)
 	return nil
