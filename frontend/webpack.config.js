@@ -15,6 +15,7 @@ const WebpackOnBuildPlugin = require('on-build-webpack');
 const LiveReloadPlugin = require('webpack-livereload-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const devMode = process.env.NODE_ENV !== PRODUCTION_ENV;
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     cache: true,
@@ -55,6 +56,10 @@ module.exports = {
     devtool: devMode ? "source-map" : false,
 
     plugins: [
+        new CopyWebpackPlugin([
+            { from: '../node_modules/@mdi/font/css', to: path.join(buildDir, 'css') },
+            { from: '../node_modules/@mdi/font/fonts', to: path.join(buildDir, 'fonts') },
+        ]),
         new VueLoaderPlugin(),
         new webpack.NoEmitOnErrorsPlugin(),
         new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /^$/),
@@ -77,7 +82,6 @@ module.exports = {
 
     resolve: {
         alias: {
-            // 'jquery': require.resolve('jquery'), // for uniform.js
             // 'vue': path.resolve(path.join(__dirname, 'node_modules', 'vue/dist/vue.js')), // fix "Vue is not constructor" in vue-online
             'vue$': path.resolve(path.join(__dirname, 'node_modules', 'vue/dist/vue.esm.js')), // it's important, else you will get "You are using the runtime-only build of Vue where the template compiler is not available. Either pre-compile the templates into render functions, or use the compiler-included build."
             '@': path.resolve(__dirname, 'src')
